@@ -41,12 +41,12 @@ export function UpvoteButton({
         disabled={disabled || isLoading}
         className={cn(
           'h-8 w-8',
-          isUpvoted && 'text-orange-500 hover:text-orange-600'
+          isUpvoted && 'text-green-600 hover:text-green-700'
         )}
       >
-        <ArrowUp className={cn('h-5 w-5', isUpvoted && 'fill-current')} />
+        <ArrowUp className="h-5 w-5" />
       </Button>
-      <span className={cn('text-sm font-medium', isUpvoted && 'text-orange-500')}>
+      <span className={cn('text-sm font-medium', isUpvoted && 'text-green-600')}>
         {upvotes}
       </span>
     </div>

@@ -59,6 +59,26 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
     }
   };
 
+  const handleRemoveUpvote = async (questionId) => {
+    if (!upvotedQuestions.includes(questionId)) return;
+
+    try {
+      const result = await forumAPI.removeUpvoteQuestion(questionId, sessionId);
+
+      // Update local state
+      setQuestions(prev => prev.map(q =>
+        q.id === questionId ? { ...q, upvotes: result.upvotes } : q
+      ));
+
+      // Update localStorage
+      const newUpvoted = upvotedQuestions.filter(id => id !== questionId);
+      setUpvotedQuestions(newUpvoted);
+      localStorage.setItem('upvoted_questions', JSON.stringify(newUpvoted));
+    } catch (err) {
+      console.error('Failed to remove upvote:', err);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -123,6 +143,7 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
                 question={question}
                 onClick={() => onQuestionClick?.(question.id)}
                 onUpvote={handleUpvote}
+                onRemoveUpvote={handleRemoveUpvote}
                 isUpvoted={upvotedQuestions.includes(question.id)}
               />
             ))}

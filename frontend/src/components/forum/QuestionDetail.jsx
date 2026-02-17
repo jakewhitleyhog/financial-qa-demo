@@ -51,19 +51,30 @@ export function QuestionDetail({ questionId, onBack }) {
   };
 
   const handleUpvote = async () => {
-    if (isUpvoted) return;
-
     try {
-      const result = await forumAPI.upvoteQuestion(questionId, sessionId);
-      setQuestion(prev => ({ ...prev, upvotes: result.upvotes }));
-      setIsUpvoted(true);
+      if (isUpvoted) {
+        // Remove upvote
+        const result = await forumAPI.removeUpvoteQuestion(questionId, sessionId);
+        setQuestion(prev => ({ ...prev, upvotes: result.upvotes }));
+        setIsUpvoted(false);
 
-      // Save to localStorage
-      const upvoted = JSON.parse(localStorage.getItem('upvoted_questions') || '[]');
-      upvoted.push(questionId);
-      localStorage.setItem('upvoted_questions', JSON.stringify(upvoted));
+        // Update localStorage
+        const upvoted = JSON.parse(localStorage.getItem('upvoted_questions') || '[]');
+        const filtered = upvoted.filter(id => id !== questionId);
+        localStorage.setItem('upvoted_questions', JSON.stringify(filtered));
+      } else {
+        // Add upvote
+        const result = await forumAPI.upvoteQuestion(questionId, sessionId);
+        setQuestion(prev => ({ ...prev, upvotes: result.upvotes }));
+        setIsUpvoted(true);
+
+        // Save to localStorage
+        const upvoted = JSON.parse(localStorage.getItem('upvoted_questions') || '[]');
+        upvoted.push(questionId);
+        localStorage.setItem('upvoted_questions', JSON.stringify(upvoted));
+      }
     } catch (err) {
-      console.error('Failed to upvote:', err);
+      console.error('Failed to toggle upvote:', err);
     }
   };
 
@@ -135,13 +146,12 @@ export function QuestionDetail({ questionId, onBack }) {
           <div className="flex flex-col items-center gap-2">
             <button
               onClick={handleUpvote}
-              disabled={isUpvoted}
               className={`p-2 rounded-lg transition-colors ${
                 isUpvoted
-                  ? 'text-green-600 bg-green-50 cursor-default'
+                  ? 'text-green-600 bg-green-50 hover:bg-green-100'
                   : 'text-gray-400 hover:text-green-600 hover:bg-gray-100'
               }`}
-              title={isUpvoted ? 'Already upvoted' : 'Upvote this question'}
+              title={isUpvoted ? 'Remove upvote' : 'Upvote this question'}
             >
               <ArrowUp className="h-6 w-6" />
             </button>

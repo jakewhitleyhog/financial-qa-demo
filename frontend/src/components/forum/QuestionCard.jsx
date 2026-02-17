@@ -9,7 +9,7 @@ import { UpvoteButton } from './UpvoteButton';
 import { MessageSquare, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function QuestionCard({ question, onClick, onUpvote, isUpvoted = false }) {
+export function QuestionCard({ question, onClick, onUpvote, onRemoveUpvote, isUpvoted = false }) {
   const formattedDate = new Date(question.createdAt).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -30,6 +30,10 @@ export function QuestionCard({ question, onClick, onUpvote, isUpvoted = false })
               onUpvote={(e) => {
                 e?.stopPropagation();
                 onUpvote?.(question.id);
+              }}
+              onRemoveUpvote={(e) => {
+                e?.stopPropagation();
+                onRemoveUpvote?.(question.id);
               }}
               isUpvoted={isUpvoted}
             />
