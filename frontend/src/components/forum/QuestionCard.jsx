@@ -6,8 +6,9 @@
 import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { UpvoteButton } from './UpvoteButton';
-import { MessageSquare, User } from 'lucide-react';
+import { MessageSquare, User, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { extractTags } from '@/utils/tagExtractor';
 
 export function QuestionCard({ question, onClick, onUpvote, onRemoveUpvote, isUpvoted = false }) {
   const formattedDate = new Date(question.createdAt).toLocaleDateString('en-US', {
@@ -15,6 +16,8 @@ export function QuestionCard({ question, onClick, onUpvote, onRemoveUpvote, isUp
     day: 'numeric',
     year: 'numeric',
   });
+
+  const tags = extractTags(question.title, 2);
 
   return (
     <Card
@@ -47,9 +50,21 @@ export function QuestionCard({ question, onClick, onUpvote, onRemoveUpvote, isUp
             </h3>
 
             {/* Body preview */}
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
               {question.body}
             </p>
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="flex gap-1 mb-2">
+                {tags.map(tag => (
+                  <Badge key={tag} variant="secondary" className="text-xs">
+                    <Tag className="h-2.5 w-2.5 mr-1" />
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
 
             {/* Metadata */}
             <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">

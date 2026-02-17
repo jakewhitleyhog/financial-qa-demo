@@ -3,17 +3,20 @@
  * Lists forum questions with sorting and pagination
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 import { QuestionCard } from './QuestionCard';
+import { QuestionSkeleton } from '../ui/Skeleton';
 import { useQuestions } from '@/hooks/useQuestions';
 import { forumAPI } from '@/services/api';
-import { Loader2, PlusCircle } from 'lucide-react';
+import { Loader2, PlusCircle, Search } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/Alert';
 
 export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger }) {
   const [sortBy, setSortBy] = useState('recent');
+  const [searchQuery, setSearchQuery] = useState('');
   const { questions, setQuestions, loading, error, loadMore, pagination, refresh } = useQuestions(sortBy, 20);
 
   // Track upvoted questions (using localStorage for persistence)
@@ -79,19 +82,43 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
     }
   };
 
+  // Filter questions based on search query
+  const filteredQuestions = useMemo(() => {
+    if (!searchQuery.trim()) return questions;
+
+    const query = searchQuery.toLowerCase();
+    return questions.filter(q =>
+      q.title.toLowerCase().includes(query) ||
+      q.body.toLowerCase().includes(query) ||
+      q.userName.toLowerCase().includes(query)
+    );
+  }, [questions, searchQuery]);
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <CardTitle>Forum Questions</CardTitle>
-          <Button onClick={onNewQuestion} size="sm">
+          <Button onClick={onNewQuestion} size="sm" className="w-full sm:w-auto">
             <PlusCircle className="h-4 w-4 mr-2" />
             New Question
           </Button>
         </div>
 
+        {/* Search bar */}
+        <div className="mt-4 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search questions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
         {/* Sorting tabs */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-4">
           <Button
             variant={sortBy === 'recent' ? 'default' : 'outline'}
             size="sm"
@@ -113,7 +140,27 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
           >
             Unanswered
           </Button>
+          <Button
+            variant={sortBy === 'active' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSortBy('active')}
+          >
+            Active
+          </Button>
+          <Button
+            variant={sortBy === 'most_replies' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSortBy('most_replies')}
+          >
+            Most Replies
+          </Button>
         </div>
+
+        {searchQuery && (
+          <div className="mt-2 text-sm text-gray-600">
+            {filteredQuestions.length} result{filteredQuestions.length !== 1 ? 's' : ''} found
+          </div>
+        )}
       </CardHeader>
 
       <CardContent>
@@ -124,20 +171,32 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
         )}
 
         {loading && questions.length === 0 ? (
-          <div className="flex items-center justify-center py-12 text-muted-foreground">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            <span>Loading questions...</span>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <QuestionSkeleton key={i} />
+            ))}
           </div>
-        ) : questions.length === 0 ? (
+        ) : filteredQuestions.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            <p className="mb-4">No questions yet</p>
-            <Button onClick={onNewQuestion} variant="outline">
-              Be the first to ask!
-            </Button>
+            {searchQuery ? (
+              <>
+                <p className="mb-4">No questions match your search</p>
+                <Button onClick={() => setSearchQuery('')} variant="outline">
+                  Clear search
+                </Button>
+              </>
+            ) : (
+              <>
+                <p className="mb-4">No questions yet</p>
+                <Button onClick={onNewQuestion} variant="outline">
+                  Be the first to ask!
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
-            {questions.map((question) => (
+            {filteredQuestions.map((question) => (
               <QuestionCard
                 key={question.id}
                 question={question}

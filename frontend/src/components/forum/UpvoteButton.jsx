@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { Button } from '../ui/Button';
+import { AnimatedNumber } from '../ui/AnimatedNumber';
 import { ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -46,9 +47,10 @@ export function UpvoteButton({
       >
         <ArrowUp className="h-5 w-5" />
       </Button>
-      <span className={cn('text-sm font-medium', isUpvoted && 'text-green-600')}>
-        {upvotes}
-      </span>
+      <AnimatedNumber
+        value={upvotes}
+        className={cn('text-sm font-medium', isUpvoted && 'text-green-600')}
+      />
     </div>
   );
 }

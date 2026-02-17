@@ -140,10 +140,10 @@ export function QuestionDetail({ questionId, onBack }) {
       </Button>
 
       {/* Question card */}
-      <Card className="p-6">
-        <div className="flex gap-4">
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row gap-4">
           {/* Upvote section */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex sm:flex-col items-center sm:items-center gap-2 sm:gap-2 justify-start sm:justify-start">
             <button
               onClick={handleUpvote}
               className={`p-2 rounded-lg transition-colors ${
