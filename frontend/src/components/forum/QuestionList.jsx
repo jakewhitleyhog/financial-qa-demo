@@ -3,36 +3,60 @@
  * Lists forum questions with sorting and pagination
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { QuestionCard } from './QuestionCard';
 import { useQuestions } from '@/hooks/useQuestions';
+import { forumAPI } from '@/services/api';
 import { Loader2, PlusCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/Alert';
 
-export function QuestionList({ onQuestionClick, onNewQuestion }) {
+export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger }) {
   const [sortBy, setSortBy] = useState('recent');
-  const { questions, loading, error, loadMore, pagination } = useQuestions(sortBy, 20);
+  const { questions, setQuestions, loading, error, loadMore, pagination, refresh } = useQuestions(sortBy, 20);
 
   // Track upvoted questions (using localStorage for persistence)
   const [upvotedQuestions, setUpvotedQuestions] = useState(() => {
-    const stored = localStorage.getItem('upvotedQuestions');
-    return stored ? JSON.parse(stored) : {};
+    const stored = localStorage.getItem('upvoted_questions');
+    return stored ? JSON.parse(stored) : [];
   });
 
-  const handleUpvote = async (questionId) => {
-    // For now, just track locally (would call API in full implementation)
-    const newUpvoted = { ...upvotedQuestions, [questionId]: true };
-    setUpvotedQuestions(newUpvoted);
-    localStorage.setItem('upvotedQuestions', JSON.stringify(newUpvoted));
-  };
+  // Session ID for API calls
+  const [sessionId] = useState(() => {
+    let id = localStorage.getItem('forum_session_id');
+    if (!id) {
+      id = 'session_' + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('forum_session_id', id);
+    }
+    return id;
+  });
 
-  const handleRemoveUpvote = async (questionId) => {
-    const newUpvoted = { ...upvotedQuestions };
-    delete newUpvoted[questionId];
-    setUpvotedQuestions(newUpvoted);
-    localStorage.setItem('upvotedQuestions', JSON.stringify(newUpvoted));
+  // Refresh when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      refresh();
+    }
+  }, [refreshTrigger, refresh]);
+
+  const handleUpvote = async (questionId) => {
+    if (upvotedQuestions.includes(questionId)) return;
+
+    try {
+      const result = await forumAPI.upvoteQuestion(questionId, sessionId);
+
+      // Update local state
+      setQuestions(prev => prev.map(q =>
+        q.id === questionId ? { ...q, upvotes: result.upvotes } : q
+      ));
+
+      // Update localStorage
+      const newUpvoted = [...upvotedQuestions, questionId];
+      setUpvotedQuestions(newUpvoted);
+      localStorage.setItem('upvoted_questions', JSON.stringify(newUpvoted));
+    } catch (err) {
+      console.error('Failed to upvote:', err);
+    }
   };
 
   return (
@@ -99,8 +123,7 @@ export function QuestionList({ onQuestionClick, onNewQuestion }) {
                 question={question}
                 onClick={() => onQuestionClick?.(question.id)}
                 onUpvote={handleUpvote}
-                onRemoveUpvote={handleRemoveUpvote}
-                isUpvoted={upvotedQuestions[question.id]}
+                isUpvoted={upvotedQuestions.includes(question.id)}
               />
             ))}
 

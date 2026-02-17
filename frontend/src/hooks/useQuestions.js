@@ -74,6 +74,7 @@ export function useQuestions(sortBy = 'recent', limit = 20) {
 
   return {
     questions,
+    setQuestions,
     pagination,
     loading,
     error,

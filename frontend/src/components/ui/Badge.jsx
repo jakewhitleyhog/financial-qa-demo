@@ -12,7 +12,7 @@ const badgeVariants = {
   outline: 'text-foreground border border-input',
   success: 'bg-green-500 text-white hover:bg-green-600',
   warning: 'bg-yellow-500 text-white hover:bg-yellow-600',
-  info: 'bg-blue-500 text-white hover:bg-blue-600',
+  info: 'bg-green-500 text-white hover:bg-green-600',
 };
 
 export function Badge({ className, variant = 'default', ...props }) {
