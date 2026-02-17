@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: financial-qa-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: FRONTEND_URL
+        fromGroup: frontend-url
+      - key: ANTHROPIC_API_KEY
+        sync: false

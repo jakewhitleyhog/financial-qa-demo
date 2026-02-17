@@ -1,0 +1,27 @@
+{
+  "name": "financial-qa-backend",
+  "version": "1.0.0",
+  "description": "Backend for Customer Q&A webapp with LLM financial assistant",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "init-db": "node scripts/init-db.js"
+  },
+  "keywords": ["express", "sqlite", "anthropic", "claude", "text-to-sql"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "sql.js": "^1.10.3",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.1",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
