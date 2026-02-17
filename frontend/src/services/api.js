@@ -23,6 +23,18 @@ async function fetchAPI(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
+
+    // Check content type before parsing
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error(
+        response.ok
+          ? 'Server returned non-JSON response'
+          : `Server error (${response.status}): ${text.slice(0, 100)}`
+      );
+    }
+
     const data = await response.json();
 
     if (!response.ok) {
@@ -31,6 +43,11 @@ async function fetchAPI(endpoint, options = {}) {
 
     return data;
   } catch (error) {
+    // Provide a clearer message for network errors
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      console.error('API Error: Cannot reach the backend server');
+      throw new Error('Cannot connect to server. Please check that the backend is running.');
+    }
     console.error('API Error:', error);
     throw error;
   }

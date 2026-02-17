@@ -119,41 +119,22 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
 
         {/* Sorting tabs */}
         <div className="flex flex-wrap gap-2 mt-4">
-          <Button
-            variant={sortBy === 'recent' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSortBy('recent')}
-          >
-            Recent
-          </Button>
-          <Button
-            variant={sortBy === 'popular' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSortBy('popular')}
-          >
-            Popular
-          </Button>
-          <Button
-            variant={sortBy === 'unanswered' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSortBy('unanswered')}
-          >
-            Unanswered
-          </Button>
-          <Button
-            variant={sortBy === 'active' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSortBy('active')}
-          >
-            Active
-          </Button>
-          <Button
-            variant={sortBy === 'most_replies' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSortBy('most_replies')}
-          >
-            Most Replies
-          </Button>
+          {[
+            { key: 'recent', label: 'All' },
+            { key: 'popular', label: 'Popular' },
+            { key: 'most_replies', label: 'Most Replies' },
+            { key: 'active', label: 'Active' },
+            { key: 'unanswered', label: 'Unanswered' },
+          ].map(tab => (
+            <Button
+              key={tab.key}
+              variant={sortBy === tab.key ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSortBy(tab.key)}
+            >
+              {tab.label}
+            </Button>
+          ))}
         </div>
 
         {searchQuery && (

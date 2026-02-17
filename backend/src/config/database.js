@@ -130,16 +130,40 @@ export function run(sql, params = []) {
   try {
     db.run(sql, params);
 
+    // Get last inserted ID BEFORE saving (save can reset internal state)
+    let lastID = null;
+    const changes = db.getRowsModified();
+
+    try {
+      const result = db.exec('SELECT last_insert_rowid()');
+      if (result.length > 0 && result[0].values.length > 0) {
+        lastID = result[0].values[0][0];
+      }
+    } catch (e) {
+      console.error('Error getting last insert ID:', e);
+    }
+
+    // If lastID is still 0 or null for an INSERT, fallback to querying the table
+    if ((!lastID || lastID === 0) && sql.trim().toUpperCase().startsWith('INSERT')) {
+      try {
+        const tableName = sql.match(/INSERT\s+INTO\s+(\w+)/i)?.[1];
+        if (tableName) {
+          const maxResult = db.exec(`SELECT MAX(id) FROM ${tableName}`);
+          if (maxResult.length > 0 && maxResult[0].values.length > 0) {
+            lastID = maxResult[0].values[0][0];
+          }
+        }
+      } catch (e) {
+        console.error('Error getting max ID:', e);
+      }
+    }
+
     // Save database after write operation
     saveDatabase();
 
-    // Get last inserted ID if applicable
-    const lastIdResult = query('SELECT last_insert_rowid() as lastID');
-    const lastID = lastIdResult[0]?.lastID || null;
-
     return {
       lastID,
-      changes: db.getRowsModified()
+      changes
     };
   } catch (error) {
     console.error('Run error:', error);

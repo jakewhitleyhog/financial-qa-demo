@@ -62,13 +62,29 @@ export async function listQuestions(req, res) {
   try {
     const limit = parseInt(req.query.limit) || 20;
     const offset = parseInt(req.query.offset) || 0;
-    const sortBy = req.query.sortBy || 'recent'; // 'recent', 'popular', 'unanswered'
+    const sortBy = req.query.sortBy || 'recent';
 
-    let orderClause = 'ORDER BY created_at DESC';
-    if (sortBy === 'popular') {
-      orderClause = 'ORDER BY upvotes DESC, created_at DESC';
-    } else if (sortBy === 'unanswered') {
-      orderClause = 'WHERE is_answered = 0 ORDER BY created_at DESC';
+    // Build WHERE and ORDER BY clauses based on sort option
+    let whereClause = '';
+    let orderClause = 'fq.created_at DESC';
+
+    switch (sortBy) {
+      case 'popular':
+        orderClause = 'fq.upvotes DESC, fq.created_at DESC';
+        break;
+      case 'unanswered':
+        whereClause = 'WHERE fq.is_answered = 0';
+        break;
+      case 'active':
+        orderClause = 'fq.updated_at DESC';
+        break;
+      case 'most_replies':
+        orderClause = 'reply_count DESC, fq.created_at DESC';
+        break;
+      case 'recent':
+      default:
+        orderClause = 'fq.created_at DESC';
+        break;
     }
 
     const questions = query(
@@ -77,16 +93,16 @@ export async function listQuestions(req, res) {
         COUNT(DISTINCT fr.id) as reply_count
        FROM forum_questions fq
        LEFT JOIN forum_replies fr ON fq.id = fr.question_id
-       ${sortBy === 'unanswered' ? 'WHERE fq.is_answered = 0' : ''}
+       ${whereClause}
        GROUP BY fq.id
-       ORDER BY ${sortBy === 'popular' ? 'fq.upvotes DESC, fq.created_at DESC' : 'fq.created_at DESC'}
+       ORDER BY ${orderClause}
        LIMIT ? OFFSET ?`,
       [limit, offset]
     );
 
     // Get total count
     const countResult = query(
-      `SELECT COUNT(*) as total FROM forum_questions ${sortBy === 'unanswered' ? 'WHERE is_answered = 0' : ''}`
+      `SELECT COUNT(*) as total FROM forum_questions ${whereClause}`
     );
 
     res.json({
