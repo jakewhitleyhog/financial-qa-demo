@@ -30,14 +30,8 @@ export function QuestionCard({ question, onClick, onUpvote, onRemoveUpvote, isUp
           <div className="flex-shrink-0">
             <UpvoteButton
               upvotes={question.upvotes}
-              onUpvote={(e) => {
-                e?.stopPropagation();
-                onUpvote?.(question.id);
-              }}
-              onRemoveUpvote={(e) => {
-                e?.stopPropagation();
-                onRemoveUpvote?.(question.id);
-              }}
+              onUpvote={() => onUpvote?.(question.id)}
+              onRemoveUpvote={() => onRemoveUpvote?.(question.id)}
               isUpvoted={isUpvoted}
             />
           </div>

@@ -1,105 +1,113 @@
 /**
  * HomePage Component
- * Landing page with navigation to Forum and Chat
+ * Investor portal landing page with deal overview and navigation
  */
 
 import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { MessageSquare, Bot, TrendingUp } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { MessageSquare, Bot, TrendingUp, Droplets } from 'lucide-react';
+
+const DEAL_NAME = import.meta.env.VITE_DEAL_NAME || 'Investor Portal';
 
 export function HomePage() {
+  const { investor } = useAuth();
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Hero section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">
-            Customer Q&A Platform
+            Welcome, {investor?.name?.split(' ')[0]}
           </h1>
           <p className="text-xl text-muted-foreground mb-2">
-            Community discussions + AI-powered financial insights
+            {DEAL_NAME}
           </p>
           <p className="text-muted-foreground">
-            Ask questions about financial data, forum activity, and escalation trends
+            Access deal performance data, ask questions, and connect with fellow investors
           </p>
         </div>
 
         {/* Feature cards */}
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Forum card */}
+          {/* AI Assistant card */}
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="h-6 w-6 text-primary" />
-                <CardTitle>Community Forum</CardTitle>
+                <Bot className="h-6 w-6 text-primary" />
+                <CardTitle>AI Deal Assistant</CardTitle>
               </div>
               <CardDescription>
-                Ask questions, share insights, and engage with the community
+                Get instant answers about deal performance powered by AI
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 mb-4 text-sm text-muted-foreground">
-                <li>• Reddit-style upvoting</li>
-                <li>• Threaded discussions</li>
-                <li>• Sort by popularity or recency</li>
+                <li>- Ask about well economics and production</li>
+                <li>- View projected returns and IRR</li>
+                <li>- Analyze price sensitivities and capex</li>
               </ul>
-              <Link to="/forum">
+              <Link to="/chat">
                 <Button className="w-full">
-                  Browse Forum
+                  Ask the AI Assistant
                 </Button>
               </Link>
             </CardContent>
           </Card>
 
-          {/* Chat card */}
+          {/* Forum card */}
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2 mb-2">
-                <Bot className="h-6 w-6 text-primary" />
-                <CardTitle>AI Assistant</CardTitle>
+                <MessageSquare className="h-6 w-6 text-primary" />
+                <CardTitle>Investor Q&A</CardTitle>
               </div>
               <CardDescription>
-                Natural language queries powered by Claude
+                Post questions and see what other investors are asking
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 mb-4 text-sm text-muted-foreground">
-                <li>• Text-to-SQL generation</li>
-                <li>• Query financial, forum, and routing data</li>
-                <li>• Intelligent confidence scoring</li>
+                <li>- Upvote questions you share</li>
+                <li>- Get answers from the GP team</li>
+                <li>- Browse by topic or popularity</li>
               </ul>
-              <Link to="/chat">
-                <Button className="w-full">
-                  Start Chatting
+              <Link to="/forum">
+                <Button variant="outline" className="w-full">
+                  Browse Q&A Board
                 </Button>
               </Link>
             </CardContent>
           </Card>
         </div>
 
-        {/* Unique feature highlight */}
-        <Card className="mt-8 border-primary/50">
+        {/* Deal highlight */}
+        <Card className="mt-8 border-primary/30">
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-6 w-6 text-primary" />
-              <CardTitle>🎯 Unique Feature: Universal Data Querying</CardTitle>
+              <Droplets className="h-6 w-6 text-primary" />
+              <CardTitle>Quick Start</CardTitle>
             </div>
             <CardDescription>
-              Unlike typical chatbots, our AI can query ALL data in the database
+              Try asking the AI assistant these questions about the deal
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 text-sm">
-              <div>
-                <p className="font-medium mb-1">Example queries:</p>
-                <ul className="space-y-1 text-muted-foreground">
-                  <li>💰 "What was TechFlow's Q3 2024 revenue?"</li>
-                  <li>💬 "What are the top 5 most upvoted questions?"</li>
-                  <li>📊 "How many questions were escalated this week?"</li>
-                  <li>🔄 "What financial topics get the most forum discussion?"</li>
-                </ul>
-              </div>
+            <div className="grid sm:grid-cols-2 gap-3 text-sm">
+              <Link to="/chat" className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+                "What are the Tier 1 well economics?"
+              </Link>
+              <Link to="/chat" className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+                "Show me projected production by year"
+              </Link>
+              <Link to="/chat" className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+                "What is the target IRR and MOIC?"
+              </Link>
+              <Link to="/chat" className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+                "What are the price sensitivities?"
+              </Link>
             </div>
           </CardContent>
         </Card>

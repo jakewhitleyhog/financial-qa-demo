@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    /* Clean green and black color palette */
-    --background: 120 10% 97%;          /* Very light green-tinted white */
-    --foreground: 0 0% 5%;              /* Almost black */
-    --card: 0 0% 100%;                   /* Pure white for cards */
-    --card-foreground: 0 0% 5%;         /* Almost black */
-    --popover: 0 0% 100%;                /* Pure white */
-    --popover-foreground: 0 0% 5%;      /* Almost black */
-    --primary: 142 76% 36%;              /* Medium green (emerald-600) */
-    --primary-foreground: 0 0% 100%;     /* White text on green */
-    --secondary: 120 15% 90%;            /* Light green-gray */
-    --secondary-foreground: 0 0% 10%;    /* Dark gray/black */
-    --muted: 120 10% 95%;                /* Very light green-gray */
-    --muted-foreground: 0 0% 40%;        /* Medium gray */
-    --accent: 142 70% 45%;               /* Brighter green accent */
-    --accent-foreground: 0 0% 100%;      /* White on green accent */
-    --destructive: 0 84.2% 60.2%;        /* Red for errors */
-    --destructive-foreground: 0 0% 100%; /* White on red */
-    --border: 120 10% 88%;               /* Light green-gray border */
-    --input: 120 10% 92%;                /* Light green-gray input bg */
-    --ring: 142 76% 36%;                 /* Green focus ring */
+    /* Warm brown + cream palette */
+    --background: 0 0% 100%;              /* White base */
+    --foreground: 40 7% 17%;              /* Near-black warm */
+    --card: 0 0% 100%;                    /* White cards */
+    --card-foreground: 40 7% 17%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 40 7% 17%;
+    --primary: 23 40% 44%;                /* Color 8 - warm sienna brown */
+    --primary-foreground: 0 0% 100%;      /* White text on brown */
+    --secondary: 31 26% 85%;              /* Color 1 - cream */
+    --secondary-foreground: 40 7% 17%;
+    --muted: 31 18% 93%;                  /* Light warm cream */
+    --muted-foreground: 40 10% 45%;       /* Medium warm gray */
+    --accent: 40 30% 32%;                 /* Color 2 - dark olive brown */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 31 18% 85%;                 /* Warm cream border */
+    --input: 31 15% 92%;                  /* Warm cream input bg */
+    --ring: 23 40% 44%;                   /* Sienna brown focus ring */
     --radius: 0.5rem;
   }
 }

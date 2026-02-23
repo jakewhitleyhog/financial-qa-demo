@@ -1,208 +1,218 @@
--- Seed data for Customer Q&A Webapp Demo
--- Sample companies, financial data, forum questions, chat history, and escalations
+-- Seed data for Huntington Oil & Gas II / WEM Uintah V Investor Portal
+-- Data sourced from Bridgeland Project documents and financial model
 
--- ======================
--- COMPANIES
--- ======================
+-- =============================
+-- DEAL
+-- =============================
 
-INSERT INTO companies (name, ticker_symbol, industry, description) VALUES
-('TechFlow Inc.', 'TFLW', 'SaaS', 'Enterprise workflow automation platform for mid-market companies'),
-('RetailHub Corp.', 'RTHB', 'E-commerce', 'Multi-channel retail management and inventory optimization software'),
-('GreenEnergy Solutions', 'GREN', 'Renewable Energy', 'Solar and wind energy project financing and management platform');
+INSERT INTO deals (name, entity_name, deal_type, basin, state, leasehold_acres, mineral_acres, surface_acres, total_wells_planned, capital_raise_target, target_irr, target_moic, return_of_capital_years, expected_hold_period, management_fee_structure, management_promote, fund_breakeven_oil_price, status, vintage_year) VALUES
+('Huntington Oil & Gas II', 'WEM Uintah V, LLC', 'oil_gas', 'Uinta Basin', 'UT', 13800, 3170, 2422, 70, 220000000, 20.0, 3.3, 4.4, 5, 'One-time cost plus 10% as debt and equity capital is deployed. Corporate G&A shared across all WEM entities ($6MM gross, est. $1.5MM net to WEM V).', 30.0, 45.00, 'active', 2024);
 
--- ======================
--- QUARTERLY FINANCIALS (8 quarters for each company: Q1 2023 - Q4 2024)
--- ======================
+-- =============================
+-- WELLS (from Schedule sheet - all 70 wells)
+-- =============================
 
--- TechFlow Inc. - Growing SaaS company
-INSERT INTO quarterly_financials (company_id, year, quarter, revenue, cost_of_revenue, gross_profit, operating_expenses, operating_income, net_income, earnings_per_share, report_date) VALUES
-(1, 2023, 1, 2800000, 980000, 1820000, 1680000, 140000, 112000, 0.11, '2023-03-31'),
-(1, 2023, 2, 3200000, 1120000, 2080000, 1920000, 160000, 128000, 0.13, '2023-06-30'),
-(1, 2023, 3, 3600000, 1260000, 2340000, 2088000, 252000, 201600, 0.20, '2023-09-30'),
-(1, 2023, 4, 4100000, 1435000, 2665000, 2378500, 286500, 229200, 0.23, '2023-12-31'),
-(1, 2024, 1, 4500000, 1575000, 2925000, 2565000, 360000, 288000, 0.29, '2024-03-31'),
-(1, 2024, 2, 4900000, 1715000, 3185000, 2750500, 434500, 347600, 0.35, '2024-06-30'),
-(1, 2024, 3, 5200000, 1820000, 3380000, 2912000, 468000, 374400, 0.37, '2024-09-30'),
-(1, 2024, 4, 5800000, 2030000, 3770000, 3190000, 580000, 464000, 0.46, '2024-12-31');
+INSERT INTO wells (deal_id, well_name, working_interest, well_type, gross_cost, net_cost, spud_date, frac_date, online_date, status) VALUES
+(1, 'Quarter 1H', 0.502, 'Tier 1', 9750000, 4894500, '2024-09-05', '2024-11-04', '2024-12-14', 'producing'),
+(1, 'Walker 7H', 0.9945, 'Tier 1', 9750000, 9696375, '2024-09-05', '2024-11-04', '2024-12-14', 'producing'),
+(1, 'Morgan 1H', 0.1787, 'Tier 1', 9750000, 1742325, '2024-09-05', '2024-11-04', '2024-12-14', 'producing'),
+(1, 'Shire 1H', 0.5842, 'Tier 1', 9750000, 5695950, '2024-10-25', '2024-12-13', '2025-01-14', 'producing'),
+(1, 'Clydesdale 7H', 0.6279, 'Tier 2', 9750000, 6122025, '2024-10-25', '2024-12-13', '2025-01-14', 'producing'),
+(1, 'Blackbuck 1H', 0.683, 'Tier 3 15k', 12500000, 8537083, '2024-11-29', '2025-02-12', '2025-04-01', 'producing'),
+(1, 'Bongo 7H', 0.611, 'Tier 3 15k', 12500000, 7634956, '2024-11-29', '2025-02-12', '2025-04-01', 'producing'),
+(1, 'Nilgai 1H', 1.0, 'Tier 3', 9750000, 9750000, '2024-11-29', '2025-02-12', '2025-04-01', 'producing'),
+(1, 'Gemsbok 7H', 1.0, 'Tier 3', 9750000, 9750000, '2024-11-29', '2025-02-12', '2025-04-01', 'producing'),
+(1, 'Appaloosa 1H', 0.9961, 'Tier 1', 9750000, 9711975, '2025-02-02', '2025-04-18', '2025-06-05', 'producing'),
+(1, 'Appaloosa 2H', 0.9961, 'Tier 1', 9750000, 9711975, '2025-02-02', '2025-04-18', '2025-06-05', 'producing'),
+(1, 'Appaloosa 3H', 0.9961, 'Tier 1', 9750000, 9711975, '2025-02-02', '2025-04-18', '2025-06-05', 'producing'),
+(1, 'Appaloosa 4H', 0.9961, 'Tier 1', 9750000, 9711975, '2025-02-02', '2025-04-18', '2025-06-05', 'producing'),
+(1, 'Arabian 1H', 0.9978, 'Tier 1', 9750000, 9728550, '2025-04-08', '2025-06-22', '2025-08-09', 'drilling'),
+(1, 'Arabian 2H', 0.9978, 'Tier 1', 9750000, 9728550, '2025-04-08', '2025-06-22', '2025-08-09', 'drilling'),
+(1, 'Arabian 3H', 0.9978, 'Tier 1', 9750000, 9728550, '2025-04-08', '2025-06-22', '2025-08-09', 'drilling'),
+(1, 'Arabian 4H', 0.9978, 'Tier 1', 9750000, 9728550, '2025-04-08', '2025-06-22', '2025-08-09', 'drilling'),
+(1, 'Walker 1H', 0.9945, 'Tier 1', 9750000, 9696375, '2025-06-12', '2025-08-26', '2025-10-13', 'planned'),
+(1, 'Walker 2H', 0.9945, 'Tier 1', 9750000, 9696375, '2025-06-12', '2025-08-26', '2025-10-13', 'planned'),
+(1, 'Walker 3H', 0.9945, 'Tier 1', 9750000, 9696375, '2025-06-12', '2025-08-26', '2025-10-13', 'planned'),
+(1, 'Shire 2H', 0.5842, 'Tier 1', 9750000, 5695950, '2025-06-12', '2025-08-26', '2025-10-13', 'planned'),
+(1, 'Shire 3H', 0.5842, 'Tier 1', 9750000, 5695950, '2025-08-16', '2025-10-30', '2025-12-17', 'planned'),
+(1, 'Shire 4H', 0.5842, 'Tier 1', 9750000, 5695950, '2025-08-16', '2025-10-30', '2025-12-17', 'planned'),
+(1, 'Quarter 2H', 0.502, 'Tier 1', 9750000, 4894500, '2025-08-16', '2025-10-30', '2025-12-17', 'planned'),
+(1, 'Quarter 3H', 0.502, 'Tier 1', 9750000, 4894500, '2025-08-16', '2025-10-30', '2025-12-17', 'planned'),
+(1, 'Quarter 4H', 0.502, 'Tier 1', 9750000, 4894500, '2025-10-20', '2025-12-19', '2026-01-28', 'planned'),
+(1, 'Paint 1H', 0.9982, 'Tier 2', 9750000, 9732450, '2025-10-20', '2025-12-19', '2026-01-28', 'planned'),
+(1, 'Paint 2H', 0.9982, 'Tier 2', 9750000, 9732450, '2025-10-20', '2025-12-19', '2026-01-28', 'planned'),
+(1, 'Paint 3H', 0.9982, 'Tier 2', 9750000, 9732450, '2025-12-09', '2026-02-07', '2026-03-19', 'planned'),
+(1, 'Paint 4H', 0.9982, 'Tier 2', 9750000, 9732450, '2025-12-09', '2026-02-07', '2026-03-19', 'planned'),
+(1, 'Mustang 1H', 0.9401, 'Tier 2', 9750000, 9165975, '2025-12-09', '2026-02-07', '2026-03-19', 'planned'),
+(1, 'Mustang 2H', 0.9401, 'Tier 2', 9750000, 9165975, '2026-01-28', '2026-03-29', '2026-05-08', 'planned'),
+(1, 'Mustang 3H', 0.9401, 'Tier 2', 9750000, 9165975, '2026-01-28', '2026-03-29', '2026-05-08', 'planned'),
+(1, 'Mustang 4H', 0.9401, 'Tier 2', 9750000, 9165975, '2026-01-28', '2026-03-29', '2026-05-08', 'planned'),
+(1, 'Clydesdale 1H', 0.6279, 'Tier 2', 9750000, 6122025, '2026-03-19', '2026-05-18', '2026-06-27', 'planned'),
+(1, 'Clydesdale 2H', 0.6279, 'Tier 2', 9750000, 6122025, '2026-03-19', '2026-05-18', '2026-06-27', 'planned'),
+(1, 'Clydesdale 3H', 0.6279, 'Tier 2', 9750000, 6122025, '2026-03-19', '2026-05-18', '2026-06-27', 'planned'),
+(1, 'Morgan 4H', 0.1787, 'Tier 1', 9750000, 1742325, '2026-05-08', '2026-07-07', '2026-08-16', 'planned'),
+(1, 'Morgan 3H', 0.1787, 'Tier 1', 9750000, 1742325, '2026-05-08', '2026-07-07', '2026-08-16', 'planned'),
+(1, 'Morgan 2H', 0.1787, 'Tier 1', 9750000, 1742325, '2026-05-08', '2026-07-07', '2026-08-16', 'planned'),
+(1, 'Nilgai Infill-3', 1.0, 'Tier 3', 9750000, 9750000, '2026-06-27', '2026-09-10', '2026-10-28', 'planned'),
+(1, 'Nilgai Infill-1', 1.0, 'Tier 3', 9750000, 9750000, '2026-06-27', '2026-09-10', '2026-10-28', 'planned'),
+(1, 'Nilgai Infill-4', 1.0, 'Tier 3', 9750000, 9750000, '2026-06-27', '2026-09-10', '2026-10-28', 'planned'),
+(1, 'Nilgai Infill-2', 1.0, 'Tier 3', 9750000, 9750000, '2026-06-27', '2026-09-10', '2026-10-28', 'planned'),
+(1, 'Blackbuck Infill-3', 0.683, 'Tier 3 15k', 12500000, 8537083, '2026-08-31', '2026-11-14', '2027-01-01', 'planned'),
+(1, 'Blackbuck Infill-4', 0.683, 'Tier 3 15k', 12500000, 8537083, '2026-08-31', '2026-11-14', '2027-01-01', 'planned'),
+(1, 'Blackbuck Infill-1', 0.683, 'Tier 3 15k', 12500000, 8537083, '2026-08-31', '2026-11-14', '2027-01-01', 'planned'),
+(1, 'Blackbuck Infill-2', 0.683, 'Tier 3 15k', 12500000, 8537083, '2026-08-31', '2026-11-14', '2027-01-01', 'planned'),
+(1, 'Gemsbok Infill-3', 1.0, 'Tier 3', 9750000, 9750000, '2026-11-04', '2027-01-03', '2027-02-12', 'planned'),
+(1, 'Gemsbok Infill-2', 1.0, 'Tier 3', 9750000, 9750000, '2026-11-04', '2027-01-03', '2027-02-12', 'planned'),
+(1, 'Gemsbok Infill-1', 1.0, 'Tier 3', 9750000, 9750000, '2026-11-04', '2027-01-03', '2027-02-12', 'planned'),
+(1, 'Bongo Infill-3', 0.611, 'Tier 3 15k', 12500000, 7634956, '2026-12-24', '2027-02-22', '2027-04-03', 'planned'),
+(1, 'Bongo Infill-2', 0.611, 'Tier 3 15k', 12500000, 7634956, '2026-12-24', '2027-02-22', '2027-04-03', 'planned'),
+(1, 'Bongo Infill-1', 0.611, 'Tier 3 15k', 12500000, 7634956, '2026-12-24', '2027-02-22', '2027-04-03', 'planned'),
+(1, 'Appaloosa LP Infill-3', 0.9961, 'LP', 9500000, 9462950, '2027-02-12', '2027-04-28', '2027-06-15', 'planned'),
+(1, 'Appaloosa LP Infill-2', 0.9961, 'LP', 9500000, 9462950, '2027-02-12', '2027-04-28', '2027-06-15', 'planned'),
+(1, 'Appaloosa LP Infill-4', 0.9961, 'LP', 9500000, 9462950, '2027-02-12', '2027-04-28', '2027-06-15', 'planned'),
+(1, 'Appaloosa LP Infill-1', 0.9961, 'LP', 9500000, 9462950, '2027-02-12', '2027-04-28', '2027-06-15', 'planned'),
+(1, 'Arabian LP Infill-1', 0.9978, 'LP', 9500000, 9479100, '2027-04-18', '2027-07-02', '2027-08-19', 'planned'),
+(1, 'Arabian LP Infill-2', 0.9978, 'LP', 9500000, 9479100, '2027-04-18', '2027-07-02', '2027-08-19', 'planned'),
+(1, 'Arabian LP Infill-3', 0.9978, 'LP', 9500000, 9479100, '2027-04-18', '2027-07-02', '2027-08-19', 'planned'),
+(1, 'Arabian LP Infill-4', 0.9978, 'LP', 9500000, 9479100, '2027-04-18', '2027-07-02', '2027-08-19', 'planned'),
+(1, 'Walker LP Infill-1', 0.9945, 'LP', 9500000, 9447750, '2027-06-22', '2027-09-05', '2027-10-23', 'planned'),
+(1, 'Walker LP Infill-2', 0.9945, 'LP', 9500000, 9447750, '2027-06-22', '2027-09-05', '2027-10-23', 'planned'),
+(1, 'Walker LP Infill-3', 0.9945, 'LP', 9500000, 9447750, '2027-06-22', '2027-09-05', '2027-10-23', 'planned'),
+(1, 'Walker LP Infill-4', 0.9945, 'LP', 9500000, 9447750, '2027-06-22', '2027-09-05', '2027-10-23', 'planned'),
+(1, 'Quarter LP Infill-4', 0.502, 'LP', 9500000, 4769000, '2027-08-26', '2027-11-09', '2027-12-27', 'planned'),
+(1, 'Quarter LP Infill-1', 0.502, 'LP', 9500000, 4769000, '2027-08-26', '2027-11-09', '2027-12-27', 'planned'),
+(1, 'Quarter LP Infill-3', 0.502, 'LP', 9500000, 4769000, '2027-08-26', '2027-11-09', '2027-12-27', 'planned'),
+(1, 'Quarter LP Infill-2', 0.502, 'LP', 9500000, 4769000, '2027-08-26', '2027-11-09', '2027-12-27', 'planned');
 
--- RetailHub Corp. - Steady growth
-INSERT INTO quarterly_financials (company_id, year, quarter, revenue, cost_of_revenue, gross_profit, operating_expenses, operating_income, net_income, earnings_per_share, report_date) VALUES
-(2, 2023, 1, 4500000, 1800000, 2700000, 2340000, 360000, 288000, 0.29, '2023-03-31'),
-(2, 2023, 2, 4800000, 1920000, 2880000, 2496000, 384000, 307200, 0.31, '2023-06-30'),
-(2, 2023, 3, 5100000, 2040000, 3060000, 2652000, 408000, 326400, 0.33, '2023-09-30'),
-(2, 2023, 4, 5400000, 2160000, 3240000, 2808000, 432000, 345600, 0.35, '2023-12-31'),
-(2, 2024, 1, 5700000, 2280000, 3420000, 2964000, 456000, 364800, 0.36, '2024-03-31'),
-(2, 2024, 2, 6000000, 2400000, 3600000, 3120000, 480000, 384000, 0.38, '2024-06-30'),
-(2, 2024, 3, 6300000, 2520000, 3780000, 3276000, 504000, 403200, 0.40, '2024-09-30'),
-(2, 2024, 4, 6600000, 2640000, 3960000, 3432000, 528000, 422400, 0.42, '2024-12-31');
+-- =============================
+-- WELL TYPE ECONOMICS
+-- =============================
 
--- GreenEnergy Solutions - High growth, some volatility
-INSERT INTO quarterly_financials (company_id, year, quarter, revenue, cost_of_revenue, gross_profit, operating_expenses, operating_income, net_income, earnings_per_share, report_date) VALUES
-(3, 2023, 1, 3200000, 1408000, 1792000, 1664000, 128000, 102400, 0.10, '2023-03-31'),
-(3, 2023, 2, 3800000, 1672000, 2128000, 1978400, 149600, 119680, 0.12, '2023-06-30'),
-(3, 2023, 3, 4200000, 1848000, 2352000, 2184960, 167040, 133632, 0.13, '2023-09-30'),
-(3, 2023, 4, 3900000, 1716000, 2184000, 2028720, 155280, 124224, 0.12, '2023-12-31'),
-(3, 2024, 1, 4800000, 2112000, 2688000, 2496000, 192000, 153600, 0.15, '2024-03-31'),
-(3, 2024, 2, 5500000, 2420000, 3080000, 2860800, 219200, 175360, 0.18, '2024-06-30'),
-(3, 2024, 3, 6200000, 2728000, 3472000, 3223520, 248480, 198784, 0.20, '2024-09-30'),
-(3, 2024, 4, 7000000, 3080000, 3920000, 3640000, 280000, 224000, 0.22, '2024-12-31');
+INSERT INTO well_type_economics (deal_id, tier_name, location_count, pct_of_inventory, gross_well_cost, npv_0, npv_5, npv_10, npv_15, irr, moic, return_of_capital_years, oil_eur_mbbl, gas_eur_mmcf, water_eur_mbbl, lateral_length_ft, eur_per_ft) VALUES
+(1, 'Tier 1', 17, 30, 9750000, 19830000, 14440000, 11190000, 9020000, 116.0, 3.0, 1.1, 733, 631, 716, 10360, 70.75),
+(1, 'Tier 2', 10, 18, 9750000, 13890000, 9770000, 7240000, 5540000, 65.0, 2.4, 1.5, 597, 626, 711, 10360, 57.63),
+(1, 'Tier 3 15k', 6, 10, 12500000, 11140000, 7060000, 4580000, 2910000, 32.0, 1.9, 2.5, 597, 626, 711, 15640, 38.17),
+(1, 'Tier 3', 9, 16, 9750000, 7910000, 5340000, 3620000, 2400000, 33.0, 1.8, 2.3, 458, 485, 720, 10360, 44.21),
+(1, 'LP', 14, 25, 9500000, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 580, 596, 777, 10360, 55.98);
 
--- ======================
--- EXPENSE BREAKDOWN (Last 4 quarters for each company)
--- ======================
+-- =============================
+-- ANNUAL FINANCIALS
+-- =============================
 
--- TechFlow Q1-Q4 2024
-INSERT INTO expense_breakdown (quarterly_financial_id, category, amount, percentage_of_revenue) VALUES
-(5, 'R&D', 1170000, 26.0),
-(5, 'Sales & Marketing', 900000, 20.0),
-(5, 'G&A', 495000, 11.0),
-(6, 'R&D', 1323000, 27.0),
-(6, 'Sales & Marketing', 980000, 20.0),
-(6, 'G&A', 447500, 9.1),
-(7, 'R&D', 1456000, 28.0),
-(7, 'Sales & Marketing', 1040000, 20.0),
-(7, 'G&A', 416000, 8.0),
-(8, 'R&D', 1624000, 28.0),
-(8, 'Sales & Marketing', 1160000, 20.0),
-(8, 'G&A', 406000, 7.0);
+INSERT INTO annual_financials (deal_id, period_year, oil_revenue, gas_revenue, total_revenue, total_operating_expenses, operating_income, net_income, capex_drilling, capex_completion, total_capex, avg_daily_oil_bopd, avg_daily_gas_mcfpd, avg_daily_total_boepd, total_oil_production_bbl, total_gas_production_mcf, gross_producing_wells, investor_distributions, report_date) VALUES
+(1, 2024, 3457035, 30167, 3487201, 572471, 3395951, 2195951, 19667561, 12991550, 170259389, 222.0, 62.0, 232.3, 54016, 15083, 4.4, 0, '2024-12-31'),
+(1, 2025, 168841555, 2661803, 171503358, 22870979, 152245655, 147520655, 77432774, 104074532, 199658037, 7227.8, 3646.3, 7835.5, 2638149, 1330902, 17.3, 0, '2025-12-31'),
+(1, 2026, 250840798, 6422913, 257263711, 36087865, 227139489, 223494489, 67601351, 106236185, 191221290, 10738.0, 8798.5, 12204.5, 3919387, 3211456, 40.5, 0, '2026-12-31'),
+(1, 2027, 279625690, 7476571, 287102261, 42898971, 252495563, 203560563, 58952602, 112188316, 188255010, 11970.3, 10241.9, 13677.3, 4369151, 3738285, 62.2, 47000000, '2027-12-31'),
+(1, 2028, 192247402, 6236335, 198483737, 30875426, 172944387, -24500452, 0, 0, 0, 8229.8, 8542.9, 9653.6, 3003866, 3118167, 71.2, 188632411, '2028-12-31'),
+(1, 2029, 118142163, 4262056, 122404219, 20842310, 104819421, -6782133, 0, 0, 0, 5057.5, 5838.4, 6030.5, 1845971, 2131028, 71.0, 76861088, '2029-12-31'),
+(1, 2030, 89397790, 3289054, 92686844, 16983695, 78154233, -3271042, 0, 0, 0, 3827.0, 4505.6, 4577.9, 1396840, 1644527, 71.0, 55737692, '2030-12-31');
 
--- RetailHub Q1-Q4 2024
-INSERT INTO expense_breakdown (quarterly_financial_id, category, amount, percentage_of_revenue) VALUES
-(13, 'R&D', 1140000, 20.0),
-(13, 'Sales & Marketing', 1140000, 20.0),
-(13, 'G&A', 684000, 12.0),
-(14, 'R&D', 1200000, 20.0),
-(14, 'Sales & Marketing', 1200000, 20.0),
-(14, 'G&A', 720000, 12.0),
-(15, 'R&D', 1260000, 20.0),
-(15, 'Sales & Marketing', 1260000, 20.0),
-(15, 'G&A', 756000, 12.0),
-(16, 'R&D', 1320000, 20.0),
-(16, 'Sales & Marketing', 1320000, 20.0),
-(16, 'G&A', 792000, 12.0);
+-- =============================
+-- PROJECTED RETURNS
+-- =============================
 
--- GreenEnergy Q1-Q4 2024
-INSERT INTO expense_breakdown (quarterly_financial_id, category, amount, percentage_of_revenue) VALUES
-(21, 'R&D', 960000, 20.0),
-(21, 'Sales & Marketing', 1056000, 22.0),
-(21, 'G&A', 480000, 10.0),
-(22, 'R&D', 1100000, 20.0),
-(22, 'Sales & Marketing', 1210000, 22.0),
-(22, 'G&A', 550000, 10.0),
-(23, 'R&D', 1240000, 20.0),
-(23, 'Sales & Marketing', 1364000, 22.0),
-(23, 'G&A', 620000, 10.0),
-(24, 'R&D', 1400000, 20.0),
-(24, 'Sales & Marketing', 1540000, 22.0),
-(24, 'G&A', 700000, 10.0);
+INSERT INTO projected_returns (deal_id, scenario, capital_invested, capital_returned, moic, irr, return_of_capital_years, return_of_capital_date) VALUES
+(1, 'invest_and_hold', 220000000, 718000000, 3.3, 20.0, 4.4, '2028-11-30'),
+(1, 'exit_at_year_5', 220000000, 617000000, 2.8, 28.0, 4.4, '2028-11-30');
 
--- ======================
--- KEY METRICS (Q4 2024 for each company)
--- ======================
+-- =============================
+-- PRICE SENSITIVITIES
+-- =============================
 
-INSERT INTO key_metrics (quarterly_financial_id, metric_name, metric_value, unit) VALUES
--- TechFlow Q4 2024
-(8, 'gross_margin', 65.0, 'percentage'),
-(8, 'operating_margin', 10.0, 'percentage'),
-(8, 'customer_count', 3450, 'count'),
-(8, 'customer_acquisition_cost', 1200, 'dollars'),
-(8, 'monthly_recurring_revenue', 1900000, 'dollars'),
--- RetailHub Q4 2024
-(16, 'gross_margin', 60.0, 'percentage'),
-(16, 'operating_margin', 8.0, 'percentage'),
-(16, 'customer_count', 4200, 'count'),
-(16, 'customer_acquisition_cost', 950, 'dollars'),
-(16, 'monthly_recurring_revenue', 2150000, 'dollars'),
--- GreenEnergy Q4 2024
-(24, 'gross_margin', 56.0, 'percentage'),
-(24, 'operating_margin', 4.0, 'percentage'),
-(24, 'customer_count', 2100, 'count'),
-(24, 'customer_acquisition_cost', 1800, 'dollars'),
-(24, 'monthly_recurring_revenue', 2300000, 'dollars');
+INSERT INTO price_sensitivities (deal_id, oil_price_per_bbl, capital_invested, capital_returned, moic, irr, return_of_capital_years, return_of_capital_date) VALUES
+(1, 70, 224000000, 526000000, 2.5, 14.0, 5.4, '2029-11-30'),
+(1, 80, 220000000, 530000000, 3.3, 20.0, 4.4, '2028-11-30'),
+(1, 90, 218000000, 532000000, 4.0, 27.0, 3.8, '2028-04-30');
 
--- ======================
--- FORUM QUESTIONS (15 sample questions)
--- ======================
+-- =============================
+-- CAPITAL ALLOCATION
+-- =============================
 
-INSERT INTO forum_questions (user_name, title, body, upvotes, is_answered, created_at) VALUES
-('Sarah Chen', 'What drove TechFlow''s revenue growth in Q3 2024?', 'I noticed TechFlow had significant revenue growth in Q3. What were the main factors behind this? Was it new customer acquisition or expansion from existing customers?', 12, 1, datetime('now', '-45 days')),
-('Mike Johnson', 'How do the companies compare on R&D spending?', 'I''m curious about how much each company is investing in R&D as a percentage of revenue. Which company is most R&D intensive?', 8, 1, datetime('now', '-38 days')),
-('Emily Rodriguez', 'RetailHub vs GreenEnergy - which has better margins?', 'Looking at profitability, which company has stronger margins? I''m trying to understand the unit economics better.', 15, 1, datetime('now', '-32 days')),
-('David Kim', 'Concern about GreenEnergy''s Q4 2023 dip', 'I see GreenEnergy''s revenue dipped in Q4 2023 after steady growth. Should we be worried about this volatility?', 6, 1, datetime('now', '-28 days')),
-('Rachel Thompson', 'Customer acquisition costs trending up or down?', 'Are customer acquisition costs improving over time for these companies? What''s the trend?', 10, 0, datetime('now', '-22 days')),
-('James Wilson', 'Best company for long-term growth?', 'If you had to pick one of these three companies for long-term investment, which would it be and why?', 18, 1, datetime('now', '-18 days')),
-('Lisa Anderson', 'Understanding TechFlow''s business model', 'Can someone explain TechFlow''s revenue model? Is it subscription-based or usage-based?', 4, 1, datetime('now', '-15 days')),
-('Tom Martinez', 'Sales & Marketing efficiency comparison', 'Which company gets the best return on their Sales & Marketing spend? Looking at CAC and revenue growth together.', 7, 0, datetime('now', '-12 days')),
-('Jennifer Lee', 'Why is GreenEnergy''s gross margin lower?', 'GreenEnergy has a lower gross margin than the other two companies. Is this typical for the renewable energy software space?', 9, 1, datetime('now', '-10 days')),
-('Chris Brown', 'Quarter-over-quarter vs year-over-year growth', 'What''s the YoY revenue growth rate for each company in Q4 2024?', 5, 0, datetime('now', '-8 days')),
-('Amanda White', 'Operating leverage - who''s winning?', 'Which company shows the best operating leverage? I want to see who''s scaling efficiently.', 11, 1, datetime('now', '-6 days')),
-('Kevin Davis', 'Impact of economic conditions on these companies', 'How do you think the current economic environment affects each of these companies differently?', 3, 0, datetime('now', '-5 days')),
-('Michelle Taylor', 'Total addressable market size comparison', 'Does anyone have insights on the TAM for each company''s market? Which has the largest opportunity?', 14, 1, datetime('now', '-4 days')),
-('Robert Garcia', 'Profitability timeline for each company', 'When did each company first become profitable? Is TechFlow the only consistently profitable one?', 8, 1, datetime('now', '-2 days')),
-('Nicole Clark', 'G&A expenses as % of revenue trending', 'I''m looking at how efficiently each company manages G&A expenses. What''s the trend over the last year?', 6, 0, datetime('now', '-1 day'));
+INSERT INTO capital_allocation (deal_id, category, percentage, amount) VALUES
+(1, 'drilling', 33, 72600000),
+(1, 'completion', 49, 107800000),
+(1, 'acquisition', 14, 30800000),
+(1, 'infrastructure', 4, 8800000);
 
--- ======================
--- FORUM REPLIES (Sample replies to top questions)
--- ======================
+-- =============================
+-- OPERATING ASSUMPTIONS
+-- =============================
 
-INSERT INTO forum_replies (question_id, parent_reply_id, user_name, body, upvotes, is_accepted_answer, created_at) VALUES
--- Replies to Q1 (TechFlow growth)
-(1, NULL, 'Alex Morgan', 'Great question! Looking at the data, TechFlow grew from $4.9M in Q2 to $5.2M in Q3, which is about 6% QoQ growth. The R&D investment increased to 28% of revenue, suggesting they''re building new features that could drive expansion revenue.', 5, 1, datetime('now', '-44 days')),
-(1, NULL, 'Jordan Smith', 'Also worth noting their customer count grew to 3,450 by Q4, which represents strong new customer acquisition.', 3, 0, datetime('now', '-43 days')),
--- Replies to Q2 (R&D spending)
-(2, NULL, 'Patricia Evans', 'From the latest quarter (Q4 2024):\n- TechFlow: 28% of revenue on R&D\n- RetailHub: 20% on R&D\n- GreenEnergy: 20% on R&D\n\nTechFlow is clearly the most R&D intensive, which makes sense for an enterprise SaaS platform.', 6, 1, datetime('now', '-37 days')),
--- Replies to Q3 (Margins comparison)
-(3, NULL, 'Marcus Johnson', 'RetailHub has the edge:\n- RetailHub gross margin: 60%, operating margin: 8%\n- GreenEnergy gross margin: 56%, operating margin: 4%\n\nRetailHub shows better unit economics overall.', 8, 1, datetime('now', '-31 days')),
-(3, 1, 'Emily Rodriguez', 'Thanks Marcus! So RetailHub is more efficient even though both are in software?', 2, 0, datetime('now', '-30 days')),
-(3, 2, 'Marcus Johnson', 'Exactly! RetailHub''s e-commerce focus likely has lower infrastructure costs compared to GreenEnergy''s energy project financing platform.', 4, 0, datetime('now', '-30 days')),
--- Replies to Q4 (GreenEnergy dip)
-(4, NULL, 'Stephanie Wong', 'Q4 2023 dip from $4.2M to $3.9M could be seasonal. Renewable energy projects often have Q4 slowdowns. But they bounced back strong in 2024, hitting $7M in Q4 2024. I wouldn''t worry too much.', 4, 1, datetime('now', '-27 days')),
--- Replies to Q6 (Long-term growth)
-(6, NULL, 'Andrew Miller', 'I''d go with TechFlow. Here''s why:\n1. Highest revenue growth trajectory\n2. Strong gross margins (65%)\n3. Heavy R&D investment positioning for future\n4. Reaching profitability scale\n\nThey''re executing well.', 12, 1, datetime('now', '-17 days')),
-(6, 1, 'Samantha Cruz', 'Counterpoint: GreenEnergy has 75% YoY growth vs TechFlow''s 41%. Higher risk but higher potential return.', 6, 0, datetime('now', '-16 days'));
+INSERT INTO operating_assumptions (deal_id, category, unit, cost_basis, vertical_cost, horizontal_cost) VALUES
+(1, 'Fixed LOE 1', '$/month/well', 'WI', '$2,500', '$15,000'),
+(1, 'Fixed LOE 2', '$/month/well', 'WI', '$0', '$7,500'),
+(1, 'Variable Oil', '$/bbl', 'WI', '$2.00', '$2.00'),
+(1, 'Variable Gas', '$/mcf', 'WI', '$0.35', '$0.35'),
+(1, 'Variable Water', '$/bbl', 'WI', '$1.50', '$1.50'),
+(1, 'Ad Valorem Tax', '% Revenue', 'NRI', '1%', '1%'),
+(1, 'Severance Tax', '% Revenue', 'NRI', '6%', '6%');
 
--- ======================
--- FORUM UPVOTES (Sample upvote tracking)
--- ======================
+-- =============================
+-- TRACK RECORD
+-- =============================
 
-INSERT INTO forum_upvotes (user_session_id, target_type, target_id, created_at) VALUES
-('session_001', 'question', 1, datetime('now', '-44 days')),
-('session_002', 'question', 1, datetime('now', '-43 days')),
-('session_003', 'question', 3, datetime('now', '-40 days')),
-('session_004', 'reply', 1, datetime('now', '-44 days')),
-('session_005', 'reply', 3, datetime('now', '-36 days')),
-('session_006', 'question', 6, datetime('now', '-17 days')),
-('session_007', 'reply', 7, datetime('now', '-16 days'));
+INSERT INTO track_record (entity_name, capital_raised, capital_returned, year_raised, current_boe_d, net_acres, strategy) VALUES
+('WEM I', 78000000, 77000000, 2018, 2300, 5400, 'Non-Operated & Operated'),
+('WEM II', 166000000, 230000000, 2020, 2700, 4000, 'Operated'),
+('WEM III', 174000000, 106000000, 2022, 2500, 4600, 'Non-Operated & Joint Venture'),
+('WEM IV', 220000000, 36000000, 2023, 6000, 13800, 'Joint Venture');
 
--- ======================
--- CHAT SESSIONS (Sample chat sessions)
--- ======================
+-- =============================
+-- INFRASTRUCTURE
+-- =============================
 
-INSERT INTO chat_sessions (session_id, user_name, started_at, last_activity) VALUES
-('sess_demo_001', 'Demo User', datetime('now', '-5 days'), datetime('now', '-5 days')),
-('sess_demo_002', 'Demo User', datetime('now', '-3 days'), datetime('now', '-3 days')),
-('sess_demo_003', 'Sarah Chen', datetime('now', '-1 day'), datetime('now', '-1 day'));
+INSERT INTO infrastructure (deal_id, asset_name, ownership_pct, description, fresh_water_storage_bbl, produced_water_storage_bbl, daily_water_throughput_bbl, daily_gas_throughput_mmcf, current_pipeline_miles, planned_pipeline_miles) VALUES
+(1, 'reWater, LLC', 55.0, 'For-profit infrastructure entity serving WEM assets and 3rd party operators. Revenue sources include water/gas transport fees, disposal fees, and frac water fees.', 1200000, 2775541, 40000, 22, 7.0, 15.5);
 
--- ======================
--- CHAT MESSAGES (Sample chat history)
--- ======================
+-- =============================
+-- AUTHORIZED INVESTORS
+-- =============================
 
-INSERT INTO chat_messages (session_id, role, content, generated_sql, sql_results, confidence_score, complexity_level, is_in_scope, needs_escalation, created_at) VALUES
--- Session 1: Simple financial query
-('sess_demo_001', 'user', 'What was TechFlow''s revenue in Q3 2024?', NULL, NULL, NULL, NULL, 1, 0, datetime('now', '-5 days', '+1 minute')),
-('sess_demo_001', 'assistant', 'TechFlow''s revenue in Q3 2024 was $5.2 million, representing a 6.1% increase from Q2 2024 ($4.9M) and a 44.4% increase year-over-year from Q3 2023 ($3.6M).', 'SELECT revenue, year, quarter FROM quarterly_financials qf JOIN companies c ON qf.company_id = c.id WHERE c.ticker_symbol = ''TFLW'' AND year = 2024 AND quarter = 3', '[{"revenue":5200000,"year":2024,"quarter":3}]', 0.95, 'simple', 1, 0, datetime('now', '-5 days', '+2 minutes')),
--- Session 2: Forum analytics query
-('sess_demo_002', 'user', 'What are the top 3 most upvoted questions?', NULL, NULL, NULL, NULL, 1, 0, datetime('now', '-3 days', '+1 minute')),
-('sess_demo_002', 'assistant', 'The top 3 most upvoted questions are:\n1. "Best company for long-term growth?" - 18 upvotes\n2. "RetailHub vs GreenEnergy - which has better margins?" - 15 upvotes\n3. "Total addressable market size comparison" - 14 upvotes', 'SELECT title, upvotes FROM forum_questions ORDER BY upvotes DESC LIMIT 3', '[{"title":"Best company for long-term growth?","upvotes":18},{"title":"RetailHub vs GreenEnergy - which has better margins?","upvotes":15},{"title":"Total addressable market size comparison","upvotes":14}]', 0.92, 'simple', 1, 0, datetime('now', '-3 days', '+2 minutes')),
--- Session 3: Out of scope query
-('sess_demo_003', 'user', 'What''s the weather like today?', NULL, NULL, NULL, NULL, 0, 1, datetime('now', '-1 day', '+1 minute')),
-('sess_demo_003', 'assistant', 'I apologize, but I can only answer questions related to the financial data, forum discussions, chat history, and escalation tracking in our database. Weather information is outside my scope. Is there anything about the company financials or forum activity I can help you with?', NULL, NULL, 0.15, 'simple', 0, 1, datetime('now', '-1 day', '+2 minutes'));
+INSERT INTO authorized_investors (email, name, role, deal_id, investment_amount, ownership_percentage) VALUES
+('jake@example.com', 'Jake Whitley', 'admin', 1, 2000000, 0.91),
+('sarah.chen@example.com', 'Sarah Chen', 'investor', 1, 1000000, 0.45),
+('michael.ross@example.com', 'Michael Ross', 'investor', 1, 5000000, 2.27),
+('emily.davis@example.com', 'Emily Davis', 'investor', 1, 2500000, 1.14),
+('david.park@example.com', 'David Park', 'investor', 1, 10000000, 4.55),
+('lisa.johnson@example.com', 'Lisa Johnson', 'investor', 1, 1500000, 0.68);
 
--- ======================
--- ESCALATED QUESTIONS (Sample escalations)
--- ======================
+-- =============================
+-- FORUM QUESTIONS
+-- =============================
 
-INSERT INTO escalated_questions (source_type, source_id, session_id, user_name, question_text, escalation_reason, confidence_score, status, created_at) VALUES
-('chat', 6, 'sess_demo_003', 'Sarah Chen', 'What''s the weather like today?', 'Out-of-scope: Question unrelated to database contents', 0.15, 'pending', datetime('now', '-1 day', '+3 minutes')),
-('forum', 12, NULL, 'Kevin Davis', 'Impact of economic conditions on these companies', 'Complex analysis requiring expert judgment', NULL, 'pending', datetime('now', '-5 days')),
-('chat', 999, 'sess_old_001', 'Test User', 'How do I calculate IRR for these investments?', 'Low confidence: Complex financial calculation outside data scope', 0.35, 'resolved', datetime('now', '-10 days'));
+INSERT INTO forum_questions (investor_id, user_name, title, body, upvotes, is_answered, created_at) VALUES
+(1, 'Jake Whitley', 'What is the drilling timeline for the first pad?', 'I see the first wells are planned for Q3 2024. Can we get more details on the spud-to-production timeline and which wells are being drilled first?', 8, 1, '2024-08-15 10:30:00'),
+(2, 'Sarah Chen', 'How does WEM V acreage compare to WEM IV results?', 'The teaser mentions WEM V is expected to exceed WEM IV results. What is the basis for this expectation?', 5, 1, '2024-08-20 14:20:00'),
+(3, 'Michael Ross', 'What are the Tier 1 vs Tier 2 well economics?', 'Can someone explain the difference in expected returns between Tier 1 and Tier 2 locations? The IRR spread seems significant.', 6, 0, '2024-09-10 09:15:00'),
+(4, 'Emily Davis', 'What happens if oil drops to $60/bbl?', 'The price sensitivities show $70 and $80 scenarios. Has anyone modeled a more bearish case below $70? The fund breakeven is listed at $45 WTI.', 4, 0, '2024-09-18 11:45:00'),
+(5, 'David Park', 'Explain the reWater infrastructure investment', 'WEM V owns 55% of reWater, LLC. How significant is the revenue contribution from this infrastructure asset?', 3, 0, '2024-10-05 16:00:00'),
+(1, 'Jake Whitley', 'What is the expected peak production rate?', 'Looking at the development plan, when does the program reach peak daily production and what is the projected rate?', 7, 1, '2024-10-10 08:30:00'),
+(6, 'Lisa Johnson', 'When should we expect first distributions?', 'The model shows cashflow recycling in years 1-3. When does actual cash start flowing back to investors?', 2, 0, '2024-10-15 13:00:00'),
+(2, 'Sarah Chen', 'How does the management promote work?', 'Can someone clarify the 30% management promote structure? Is it a standard waterfall or does it apply differently?', 5, 0, '2024-10-20 10:00:00');
+
+-- =============================
+-- FORUM REPLIES
+-- =============================
+
+INSERT INTO forum_replies (question_id, parent_reply_id, investor_id, user_name, body, upvotes, is_accepted_answer, created_at) VALUES
+(1, NULL, 3, 'Michael Ross', 'From the schedule, the first 3 wells (Quarter 1H, Walker 7H, Morgan 1H) spud in September 2024 with frac in November and online by December. The second pad (Shire 1H, Clydesdale 7H) follows about 7 weeks later.', 4, 0, '2024-08-16 08:00:00'),
+(1, 1, 1, 'Jake Whitley', 'Thanks Michael. So roughly 3-4 months from spud to first production. That cadence looks consistent across the program.', 2, 0, '2024-08-16 09:30:00'),
+(2, NULL, 4, 'Emily Davis', 'The presentation notes that WEM V is expected to be higher pressure with more benches available for exploitation. The GMBU field results from WEM IV showed 21 wells with 6-month cumulative of 150 MBO, which is very strong.', 3, 1, '2024-08-21 10:00:00'),
+(2, 3, 2, 'Sarah Chen', 'Great context, thanks Emily. The Betts pad completion tests also show that larger fracs dramatically improve recovery.', 1, 0, '2024-08-21 11:00:00'),
+(6, NULL, 5, 'David Park', 'You can ask the AI assistant about production forecasts. Based on the model, peak production hits around 14,000+ Boepd in mid-2027 with all 70+ wells online.', 3, 0, '2024-10-10 09:00:00'),
+(6, 5, 1, 'Jake Whitley', 'Good call. The AI pulled up the data - avg daily production peaks in 2027 at about 13,677 Boepd.', 2, 0, '2024-10-10 09:30:00');
+
+-- =============================
+-- FORUM UPVOTES
+-- =============================
+
+INSERT INTO forum_upvotes (investor_id, target_type, target_id) VALUES
+(2, 'question', 1), (3, 'question', 1), (4, 'question', 1), (5, 'question', 1), (6, 'question', 1),
+(1, 'question', 2), (3, 'question', 2), (4, 'question', 2), (5, 'question', 2),
+(1, 'question', 3), (2, 'question', 3), (4, 'question', 3), (5, 'question', 3), (6, 'question', 3),
+(1, 'question', 4), (2, 'question', 4), (5, 'question', 4),
+(1, 'question', 5), (2, 'question', 5), (3, 'question', 5),
+(2, 'question', 6), (3, 'question', 6), (4, 'question', 6), (5, 'question', 6), (6, 'question', 6),
+(1, 'question', 7), (3, 'question', 7),
+(1, 'question', 8), (3, 'question', 8), (4, 'question', 8), (5, 'question', 8);

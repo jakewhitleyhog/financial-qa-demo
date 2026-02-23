@@ -30,7 +30,7 @@ export function ForumPage() {
 
   const handleSubmitQuestion = async (data) => {
     try {
-      await forumAPI.createQuestion(data.userName, data.title, data.body);
+      await forumAPI.createQuestion(data.title, data.body);
       setView('list');
       setRefreshTrigger(prev => prev + 1); // Trigger refresh of question list
     } catch (err) {

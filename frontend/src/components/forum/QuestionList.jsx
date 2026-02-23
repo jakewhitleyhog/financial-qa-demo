@@ -1,6 +1,6 @@
 /**
  * QuestionList Component
- * Lists forum questions with sorting and pagination
+ * Lists forum questions with sorting, search, and server-driven upvote state.
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -19,22 +19,6 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
   const [searchQuery, setSearchQuery] = useState('');
   const { questions, setQuestions, loading, error, loadMore, pagination, refresh } = useQuestions(sortBy, 20);
 
-  // Track upvoted questions (using localStorage for persistence)
-  const [upvotedQuestions, setUpvotedQuestions] = useState(() => {
-    const stored = localStorage.getItem('upvoted_questions');
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  // Session ID for API calls
-  const [sessionId] = useState(() => {
-    let id = localStorage.getItem('forum_session_id');
-    if (!id) {
-      id = 'session_' + Math.random().toString(36).substring(2, 15);
-      localStorage.setItem('forum_session_id', id);
-    }
-    return id;
-  });
-
   // Refresh when refreshTrigger changes
   useEffect(() => {
     if (refreshTrigger > 0) {
@@ -43,40 +27,22 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
   }, [refreshTrigger, refresh]);
 
   const handleUpvote = async (questionId) => {
-    if (upvotedQuestions.includes(questionId)) return;
-
     try {
-      const result = await forumAPI.upvoteQuestion(questionId, sessionId);
-
-      // Update local state
+      const result = await forumAPI.upvoteQuestion(questionId);
       setQuestions(prev => prev.map(q =>
-        q.id === questionId ? { ...q, upvotes: result.upvotes } : q
+        q.id === questionId ? { ...q, upvotes: result.upvotes, isUpvoted: true } : q
       ));
-
-      // Update localStorage
-      const newUpvoted = [...upvotedQuestions, questionId];
-      setUpvotedQuestions(newUpvoted);
-      localStorage.setItem('upvoted_questions', JSON.stringify(newUpvoted));
     } catch (err) {
       console.error('Failed to upvote:', err);
     }
   };
 
   const handleRemoveUpvote = async (questionId) => {
-    if (!upvotedQuestions.includes(questionId)) return;
-
     try {
-      const result = await forumAPI.removeUpvoteQuestion(questionId, sessionId);
-
-      // Update local state
+      const result = await forumAPI.removeUpvoteQuestion(questionId);
       setQuestions(prev => prev.map(q =>
-        q.id === questionId ? { ...q, upvotes: result.upvotes } : q
+        q.id === questionId ? { ...q, upvotes: result.upvotes, isUpvoted: false } : q
       ));
-
-      // Update localStorage
-      const newUpvoted = upvotedQuestions.filter(id => id !== questionId);
-      setUpvotedQuestions(newUpvoted);
-      localStorage.setItem('upvoted_questions', JSON.stringify(newUpvoted));
     } catch (err) {
       console.error('Failed to remove upvote:', err);
     }
@@ -98,7 +64,7 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <CardTitle>Forum Questions</CardTitle>
+          <CardTitle>Investor Q&A</CardTitle>
           <Button onClick={onNewQuestion} size="sm" className="w-full sm:w-auto">
             <PlusCircle className="h-4 w-4 mr-2" />
             New Question
@@ -107,7 +73,7 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
 
         {/* Search bar */}
         <div className="mt-4 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Search questions..."
@@ -138,7 +104,7 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
         </div>
 
         {searchQuery && (
-          <div className="mt-2 text-sm text-gray-600">
+          <div className="mt-2 text-sm text-muted-foreground">
             {filteredQuestions.length} result{filteredQuestions.length !== 1 ? 's' : ''} found
           </div>
         )}
@@ -184,11 +150,10 @@ export function QuestionList({ onQuestionClick, onNewQuestion, refreshTrigger })
                 onClick={() => onQuestionClick?.(question.id)}
                 onUpvote={handleUpvote}
                 onRemoveUpvote={handleRemoveUpvote}
-                isUpvoted={upvotedQuestions.includes(question.id)}
+                isUpvoted={question.isUpvoted || false}
               />
             ))}
 
-            {/* Load more button */}
             {pagination?.hasMore && (
               <div className="flex justify-center pt-4">
                 <Button

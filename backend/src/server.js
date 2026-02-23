@@ -11,17 +11,20 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
 
 // Import database initialization
 import { initializeDatabase } from './config/database.js';
 
 // Import routes
+import authRoutes from './routes/auth.js';
 import chatRoutes from './routes/chat.js';
 import forumRoutes from './routes/forum.js';
 import routingRoutes from './routes/routing.js';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
+import { requireAuth } from './middleware/authMiddleware.js';
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +41,9 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
+
+// Cookie parsing
+app.use(cookieParser());
 
 // Body parsing
 app.use(express.json());
@@ -76,10 +82,13 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API routes
-app.use('/api/chat', chatLimiter, chatRoutes);
-app.use('/api/forum', forumRoutes);
-app.use('/api/routing', routingRoutes);
+// Auth routes (unauthenticated)
+app.use('/api/auth', authRoutes);
+
+// Protected API routes
+app.use('/api/chat', requireAuth, chatLimiter, chatRoutes);
+app.use('/api/forum', requireAuth, forumRoutes);
+app.use('/api/routing', requireAuth, routingRoutes);
 
 // ============================================
 // ERROR HANDLING
@@ -108,14 +117,16 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log('');
       console.log('========================================');
-      console.log('  Customer Q&A Webapp - Backend Server');
+      console.log('  Investor Deal Portal - Backend Server');
       console.log('========================================');
+      console.log(`  Deal: ${process.env.DEAL_NAME || 'Unconfigured'}`);
       console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`  Port: ${PORT}`);
       console.log(`  Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
       console.log('');
       console.log('  API Endpoints:');
       console.log(`    - Health: http://localhost:${PORT}/health`);
+      console.log(`    - Auth: http://localhost:${PORT}/api/auth`);
       console.log(`    - Chat: http://localhost:${PORT}/api/chat`);
       console.log(`    - Forum: http://localhost:${PORT}/api/forum`);
       console.log(`    - Routing: http://localhost:${PORT}/api/routing`);

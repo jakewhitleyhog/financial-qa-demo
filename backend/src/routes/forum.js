@@ -11,8 +11,11 @@ import {
   addReply,
   upvoteQuestion,
   removeUpvoteQuestion,
-  upvoteReply
+  upvoteReply,
+  acceptAnswer,
+  removeAcceptedAnswer
 } from '../controllers/forumController.js';
+import { requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -28,5 +31,9 @@ router.post('/questions/:id/reply', addReply);
 router.post('/questions/:id/upvote', upvoteQuestion);
 router.delete('/questions/:id/upvote', removeUpvoteQuestion);
 router.post('/replies/:id/upvote', upvoteReply);
+
+// Accepted answers (admin only)
+router.post('/questions/:questionId/accept/:replyId', requireAdmin, acceptAnswer);
+router.delete('/questions/:questionId/accept', requireAdmin, removeAcceptedAnswer);
 
 export default router;

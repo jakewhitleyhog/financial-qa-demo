@@ -30,7 +30,7 @@ export function AnimatedNumber({ value, className }) {
     <span
       className={cn(
         'inline-block transition-all duration-300',
-        isAnimating && 'scale-125 text-green-600',
+        isAnimating && 'scale-125 text-primary',
         className
       )}
     >

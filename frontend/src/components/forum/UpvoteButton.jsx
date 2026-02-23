@@ -18,7 +18,8 @@ export function UpvoteButton({
 }) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleClick = async () => {
+  const handleClick = async (e) => {
+    e.stopPropagation();
     setIsLoading(true);
     try {
       if (isUpvoted) {
@@ -42,14 +43,14 @@ export function UpvoteButton({
         disabled={disabled || isLoading}
         className={cn(
           'h-8 w-8',
-          isUpvoted && 'text-green-600 hover:text-green-700'
+          isUpvoted && 'text-primary hover:text-primary/80'
         )}
       >
         <ArrowUp className="h-5 w-5" />
       </Button>
       <AnimatedNumber
         value={upvotes}
-        className={cn('text-sm font-medium', isUpvoted && 'text-green-600')}
+        className={cn('text-sm font-medium', isUpvoted && 'text-primary')}
       />
     </div>
   );

@@ -9,9 +9,9 @@ import { AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react';
 const alertVariants = {
   default: 'bg-background text-foreground',
   destructive: 'border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive',
-  success: 'border-green-500/50 text-green-700 [&>svg]:text-green-600',
-  warning: 'border-yellow-500/50 text-yellow-700 [&>svg]:text-yellow-600',
-  info: 'border-green-500/50 text-green-700 [&>svg]:text-green-600',
+  success: 'border-amber-600/50 text-amber-800 [&>svg]:text-amber-700',
+  warning: 'border-yellow-600/50 text-yellow-700 [&>svg]:text-yellow-600',
+  info: 'border-amber-600/50 text-amber-800 [&>svg]:text-amber-700',
 };
 
 const alertIcons = {

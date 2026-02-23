@@ -36,3 +36,13 @@ yarn-error.log*
 # Temp files
 *.tmp
 .cache/
+
+# Claude Code
+.claude/
+
+# Source documents
+*.xlsx
+*.pdf
+*.jpg
+*.jpeg
+*.png

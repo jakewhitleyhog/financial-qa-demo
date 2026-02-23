@@ -35,12 +35,12 @@ export function useChatSession(initialSessionId = null) {
   /**
    * Create a new session
    */
-  const createSession = useCallback(async (userName = 'Anonymous') => {
+  const createSession = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await chatAPI.createSession(userName);
+      const response = await chatAPI.createSession();
       setSessionInfo(response.session);
       setMessages([]);
       return response.session;

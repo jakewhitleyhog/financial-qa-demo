@@ -20,13 +20,12 @@ import { analyzeRouting } from '../services/routingService.js';
  */
 export async function createSession(req, res) {
   try {
-    const { userName } = req.body;
     const sessionId = `sess_${uuidv4()}`;
 
     const result = run(
-      `INSERT INTO chat_sessions (session_id, user_name, started_at, last_activity)
-       VALUES (?, ?, datetime('now'), datetime('now'))`,
-      [sessionId, userName || 'Anonymous']
+      `INSERT INTO chat_sessions (session_id, investor_id, user_name, started_at, last_activity)
+       VALUES (?, ?, ?, datetime('now'), datetime('now'))`,
+      [sessionId, req.investor.id, req.investor.name]
     );
 
     res.status(201).json({
@@ -34,7 +33,7 @@ export async function createSession(req, res) {
       session: {
         id: result.lastID,
         sessionId,
-        userName: userName || 'Anonymous',
+        userName: req.investor.name,
         startedAt: new Date().toISOString()
       }
     });
@@ -206,7 +205,7 @@ export async function sendMessage(req, res) {
         [
           assistantMessageResult.lastID,
           sessionId,
-          sessions[0].user_name,
+          req.investor.name,
           message,
           routingAnalysis.escalationReason,
           routingAnalysis.confidenceScore
@@ -258,10 +257,11 @@ export async function listSessions(req, res) {
         COUNT(cm.id) as message_count
        FROM chat_sessions cs
        LEFT JOIN chat_messages cm ON cs.session_id = cm.session_id
+       WHERE cs.investor_id = ?
        GROUP BY cs.id
        ORDER BY cs.last_activity DESC
        LIMIT ?`,
-      [limit]
+      [req.investor.id, limit]
     );
 
     res.json({

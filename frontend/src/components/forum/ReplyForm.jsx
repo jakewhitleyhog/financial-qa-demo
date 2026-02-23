@@ -1,17 +1,15 @@
 /**
  * ReplyForm Component
- * Form for submitting replies/comments to questions or other replies
+ * Form for submitting replies/comments. User identity from auth context.
  */
 
 import { useState } from 'react';
 import { Button } from '../ui/Button';
 
 export function ReplyForm({ onSubmit, onCancel, parentReplyId = null, placeholder = "Write your reply..." }) {
-  const [userName, setUserName] = useState('');
   const [body, setBody] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [showUserName, setShowUserName] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,15 +23,11 @@ export function ReplyForm({ onSubmit, onCancel, parentReplyId = null, placeholde
     setIsSubmitting(true);
     try {
       await onSubmit({
-        userName: userName.trim() || 'Anonymous',
         body: body.trim(),
         parentReplyId
       });
 
-      // Reset form
-      setUserName('');
       setBody('');
-      setShowUserName(false);
     } catch (err) {
       setError(err.message || 'Failed to submit reply');
     } finally {
@@ -43,29 +37,6 @@ export function ReplyForm({ onSubmit, onCancel, parentReplyId = null, placeholde
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      {showUserName ? (
-        <div>
-          <input
-            type="text"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            placeholder="Your name (optional)"
-            disabled={isSubmitting}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm disabled:bg-gray-100"
-          />
-        </div>
-      ) : (
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowUserName(true)}
-            className="text-xs text-green-600 hover:text-green-700"
-          >
-            Add your name
-          </button>
-        </div>
-      )}
-
       <div>
         <textarea
           value={body}
@@ -74,7 +45,7 @@ export function ReplyForm({ onSubmit, onCancel, parentReplyId = null, placeholde
           disabled={isSubmitting}
           required
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-sm disabled:bg-muted disabled:cursor-not-allowed bg-background text-foreground"
         />
       </div>
 

@@ -19,7 +19,7 @@ export function ConfidenceIndicator({ metadata }) {
         label: 'High Confidence',
         color: 'success',
         icon: CheckCircle,
-        textColor: 'text-green-700',
+        textColor: 'text-amber-800',
       };
     } else if (score >= 0.7) {
       return {

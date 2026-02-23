@@ -33,7 +33,7 @@ export function ChatInterface({ sessionId = null }) {
   // Create session if none exists
   useEffect(() => {
     if (!sessionId && !sessionInfo && !loading) {
-      createSession('Demo User').catch(console.error);
+      createSession().catch(console.error);
     }
   }, [sessionId, sessionInfo, loading, createSession]);
 
@@ -48,9 +48,9 @@ export function ChatInterface({ sessionId = null }) {
   return (
     <Card className="flex flex-col h-[calc(100vh-200px)]">
       <CardHeader>
-        <CardTitle>AI Financial Assistant</CardTitle>
+        <CardTitle>Deal AI Assistant</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Ask questions about financial data, forum activity, or escalation trends
+          Ask questions about deal performance, occupancy, NOI, distributions, and more
         </p>
       </CardHeader>
 
@@ -68,9 +68,9 @@ export function ChatInterface({ sessionId = null }) {
               <div className="text-sm space-y-2">
                 <p className="font-medium">Example questions:</p>
                 <ul className="text-left space-y-1">
-                  <li>• What was TechFlow's Q3 2024 revenue?</li>
-                  <li>• Show me the top 3 most upvoted questions</li>
-                  <li>• How many questions were escalated this week?</li>
+                  <li>• What is the current occupancy rate?</li>
+                  <li>• Show me the NOI trend over the past year</li>
+                  <li>• When was the last distribution?</li>
                 </ul>
               </div>
             </div>
@@ -99,7 +99,7 @@ export function ChatInterface({ sessionId = null }) {
           placeholder={
             sending
               ? 'Sending...'
-              : 'Ask about finances, forum activity, or escalations...'
+              : 'Ask about deal performance, occupancy, NOI, distributions...'
           }
         />
 
@@ -109,26 +109,26 @@ export function ChatInterface({ sessionId = null }) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSendMessage("What was TechFlow's Q3 2024 revenue?")}
+              onClick={() => handleSendMessage("What is the current occupancy rate?")}
               disabled={!sessionInfo || sending}
             >
-              Financial Query
+              Occupancy
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSendMessage("What are the top 5 most upvoted questions?")}
+              onClick={() => handleSendMessage("Show me the NOI trend over the past year")}
               disabled={!sessionInfo || sending}
             >
-              Forum Analytics
+              NOI Trend
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSendMessage("How many questions were escalated this week?")}
+              onClick={() => handleSendMessage("What was the most recent distribution amount?")}
               disabled={!sessionInfo || sending}
             >
-              Escalation Insights
+              Distributions
             </Button>
           </div>
         )}

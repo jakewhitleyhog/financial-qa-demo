@@ -1,6 +1,7 @@
 /**
  * QuestionForm Component
- * Form for submitting new questions to the forum
+ * Form for submitting new questions to the forum.
+ * User identity comes from auth context (no manual name input).
  */
 
 import { useState } from 'react';
@@ -9,7 +10,6 @@ import { Input } from '../ui/Input';
 import { Card } from '../ui/Card';
 
 export function QuestionForm({ onSubmit, onCancel }) {
-  const [userName, setUserName] = useState('');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,13 +27,10 @@ export function QuestionForm({ onSubmit, onCancel }) {
     setIsSubmitting(true);
     try {
       await onSubmit({
-        userName: userName.trim() || 'Anonymous',
         title: title.trim(),
         body: body.trim()
       });
 
-      // Reset form
-      setUserName('');
       setTitle('');
       setBody('');
     } catch (err) {
@@ -49,21 +46,7 @@ export function QuestionForm({ onSubmit, onCancel }) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">
-            Your Name (optional)
-          </label>
-          <Input
-            id="userName"
-            type="text"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
-            placeholder="Anonymous"
-            disabled={isSubmitting}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="title" className="block text-sm font-medium text-foreground mb-1">
             Title <span className="text-red-500">*</span>
           </label>
           <Input
@@ -78,7 +61,7 @@ export function QuestionForm({ onSubmit, onCancel }) {
         </div>
 
         <div>
-          <label htmlFor="body" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="body" className="block text-sm font-medium text-foreground mb-1">
             Question Details <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -89,7 +72,7 @@ export function QuestionForm({ onSubmit, onCancel }) {
             disabled={isSubmitting}
             required
             rows={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:bg-muted disabled:cursor-not-allowed bg-background text-foreground"
           />
         </div>
 

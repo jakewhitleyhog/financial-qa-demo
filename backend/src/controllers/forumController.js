@@ -1,11 +1,7 @@
 /**
  * Forum Controller - Handles forum questions, replies, and upvotes
  *
- * This controller manages the Reddit-style Q&A forum functionality:
- * - Creating and retrieving questions
- * - Adding replies (with threading support)
- * - Upvoting questions and replies
- * - Sorting and pagination
+ * Uses req.investor (set by auth middleware) for user identification.
  */
 
 import { query, run } from '../config/database.js';
@@ -16,9 +12,8 @@ import { query, run } from '../config/database.js';
  */
 export async function createQuestion(req, res) {
   try {
-    const { userName, title, body } = req.body;
+    const { title, body } = req.body;
 
-    // Validation
     if (!title || !body) {
       return res.status(400).json({
         success: false,
@@ -27,16 +22,16 @@ export async function createQuestion(req, res) {
     }
 
     const result = run(
-      `INSERT INTO forum_questions (user_name, title, body, upvotes, is_answered, created_at, updated_at)
-       VALUES (?, ?, ?, 0, 0, datetime('now'), datetime('now'))`,
-      [userName || 'Anonymous', title, body]
+      `INSERT INTO forum_questions (investor_id, user_name, title, body, upvotes, is_answered, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 0, 0, datetime('now'), datetime('now'))`,
+      [req.investor.id, req.investor.name, title, body]
     );
 
     res.status(201).json({
       success: true,
       question: {
         id: result.lastID,
-        userName: userName || 'Anonymous',
+        userName: req.investor.name,
         title,
         body,
         upvotes: 0,
@@ -64,7 +59,6 @@ export async function listQuestions(req, res) {
     const offset = parseInt(req.query.offset) || 0;
     const sortBy = req.query.sortBy || 'recent';
 
-    // Build WHERE and ORDER BY clauses based on sort option
     let whereClause = '';
     let orderClause = 'fq.created_at DESC';
 
@@ -100,10 +94,16 @@ export async function listQuestions(req, res) {
       [limit, offset]
     );
 
-    // Get total count
     const countResult = query(
       `SELECT COUNT(*) as total FROM forum_questions ${whereClause}`
     );
+
+    // Check which questions the current investor has upvoted
+    const investorUpvotes = query(
+      `SELECT target_id FROM forum_upvotes WHERE investor_id = ? AND target_type = 'question'`,
+      [req.investor.id]
+    );
+    const upvotedIds = new Set(investorUpvotes.map(u => u.target_id));
 
     res.json({
       success: true,
@@ -114,6 +114,7 @@ export async function listQuestions(req, res) {
         body: q.body,
         upvotes: q.upvotes,
         isAnswered: Boolean(q.is_answered),
+        isUpvoted: upvotedIds.has(q.id),
         replyCount: q.reply_count,
         createdAt: q.created_at,
         updatedAt: q.updated_at
@@ -143,7 +144,6 @@ export async function getQuestion(req, res) {
   try {
     const { id } = req.params;
 
-    // Get the question
     const questions = query(
       `SELECT * FROM forum_questions WHERE id = ?`,
       [id]
@@ -156,7 +156,6 @@ export async function getQuestion(req, res) {
       });
     }
 
-    // Get all replies (will be organized into tree structure by frontend)
     const replies = query(
       `SELECT * FROM forum_replies
        WHERE question_id = ?
@@ -165,6 +164,19 @@ export async function getQuestion(req, res) {
     );
 
     const question = questions[0];
+
+    // Check if current investor has upvoted this question
+    const questionUpvote = query(
+      `SELECT id FROM forum_upvotes WHERE investor_id = ? AND target_type = 'question' AND target_id = ?`,
+      [req.investor.id, id]
+    );
+
+    // Check which replies the investor has upvoted
+    const replyUpvotes = query(
+      `SELECT target_id FROM forum_upvotes WHERE investor_id = ? AND target_type = 'reply'`,
+      [req.investor.id]
+    );
+    const upvotedReplyIds = new Set(replyUpvotes.map(u => u.target_id));
 
     res.json({
       success: true,
@@ -175,6 +187,7 @@ export async function getQuestion(req, res) {
         body: question.body,
         upvotes: question.upvotes,
         isAnswered: Boolean(question.is_answered),
+        isUpvoted: questionUpvote.length > 0,
         createdAt: question.created_at,
         updatedAt: question.updated_at
       },
@@ -185,6 +198,7 @@ export async function getQuestion(req, res) {
         userName: r.user_name,
         body: r.body,
         upvotes: r.upvotes,
+        isUpvoted: upvotedReplyIds.has(r.id),
         isAcceptedAnswer: Boolean(r.is_accepted_answer),
         createdAt: r.created_at,
         updatedAt: r.updated_at
@@ -207,9 +221,8 @@ export async function getQuestion(req, res) {
 export async function addReply(req, res) {
   try {
     const { id } = req.params;
-    const { userName, body, parentReplyId } = req.body;
+    const { body, parentReplyId } = req.body;
 
-    // Validation
     if (!body) {
       return res.status(400).json({
         success: false,
@@ -217,7 +230,6 @@ export async function addReply(req, res) {
       });
     }
 
-    // Verify question exists
     const questions = query(
       `SELECT * FROM forum_questions WHERE id = ?`,
       [id]
@@ -231,12 +243,11 @@ export async function addReply(req, res) {
     }
 
     const result = run(
-      `INSERT INTO forum_replies (question_id, parent_reply_id, user_name, body, upvotes, is_accepted_answer, created_at, updated_at)
-       VALUES (?, ?, ?, ?, 0, 0, datetime('now'), datetime('now'))`,
-      [id, parentReplyId || null, userName || 'Anonymous', body]
+      `INSERT INTO forum_replies (question_id, parent_reply_id, investor_id, user_name, body, upvotes, is_accepted_answer, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 0, 0, datetime('now'), datetime('now'))`,
+      [id, parentReplyId || null, req.investor.id, req.investor.name, body]
     );
 
-    // Update question's updated_at timestamp
     run(
       `UPDATE forum_questions SET updated_at = datetime('now') WHERE id = ?`,
       [id]
@@ -248,7 +259,7 @@ export async function addReply(req, res) {
         id: result.lastID,
         questionId: parseInt(id),
         parentReplyId: parentReplyId || null,
-        userName: userName || 'Anonymous',
+        userName: req.investor.name,
         body,
         upvotes: 0,
         isAcceptedAnswer: false,
@@ -272,20 +283,12 @@ export async function addReply(req, res) {
 export async function upvoteQuestion(req, res) {
   try {
     const { id } = req.params;
-    const { sessionId } = req.body;
+    const investorId = req.investor.id;
 
-    if (!sessionId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Session ID is required'
-      });
-    }
-
-    // Check if already upvoted
     const existing = query(
       `SELECT * FROM forum_upvotes
-       WHERE user_session_id = ? AND target_type = 'question' AND target_id = ?`,
-      [sessionId, id]
+       WHERE investor_id = ? AND target_type = 'question' AND target_id = ?`,
+      [investorId, id]
     );
 
     if (existing.length > 0) {
@@ -295,20 +298,17 @@ export async function upvoteQuestion(req, res) {
       });
     }
 
-    // Add upvote record
     run(
-      `INSERT INTO forum_upvotes (user_session_id, target_type, target_id, created_at)
+      `INSERT INTO forum_upvotes (investor_id, target_type, target_id, created_at)
        VALUES (?, 'question', ?, datetime('now'))`,
-      [sessionId, id]
+      [investorId, id]
     );
 
-    // Increment upvote count
     run(
       `UPDATE forum_questions SET upvotes = upvotes + 1 WHERE id = ?`,
       [id]
     );
 
-    // Get new upvote count
     const questions = query(
       `SELECT upvotes FROM forum_questions WHERE id = ?`,
       [id]
@@ -335,31 +335,21 @@ export async function upvoteQuestion(req, res) {
 export async function removeUpvoteQuestion(req, res) {
   try {
     const { id } = req.params;
-    const { sessionId } = req.body;
+    const investorId = req.investor.id;
 
-    if (!sessionId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Session ID is required'
-      });
-    }
-
-    // Remove upvote record
     const result = run(
       `DELETE FROM forum_upvotes
-       WHERE user_session_id = ? AND target_type = 'question' AND target_id = ?`,
-      [sessionId, id]
+       WHERE investor_id = ? AND target_type = 'question' AND target_id = ?`,
+      [investorId, id]
     );
 
     if (result.changes > 0) {
-      // Decrement upvote count
       run(
         `UPDATE forum_questions SET upvotes = upvotes - 1 WHERE id = ?`,
         [id]
       );
     }
 
-    // Get new upvote count
     const questions = query(
       `SELECT upvotes FROM forum_questions WHERE id = ?`,
       [id]
@@ -386,20 +376,12 @@ export async function removeUpvoteQuestion(req, res) {
 export async function upvoteReply(req, res) {
   try {
     const { id } = req.params;
-    const { sessionId } = req.body;
+    const investorId = req.investor.id;
 
-    if (!sessionId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Session ID is required'
-      });
-    }
-
-    // Check if already upvoted
     const existing = query(
       `SELECT * FROM forum_upvotes
-       WHERE user_session_id = ? AND target_type = 'reply' AND target_id = ?`,
-      [sessionId, id]
+       WHERE investor_id = ? AND target_type = 'reply' AND target_id = ?`,
+      [investorId, id]
     );
 
     if (existing.length > 0) {
@@ -409,20 +391,17 @@ export async function upvoteReply(req, res) {
       });
     }
 
-    // Add upvote record
     run(
-      `INSERT INTO forum_upvotes (user_session_id, target_type, target_id, created_at)
+      `INSERT INTO forum_upvotes (investor_id, target_type, target_id, created_at)
        VALUES (?, 'reply', ?, datetime('now'))`,
-      [sessionId, id]
+      [investorId, id]
     );
 
-    // Increment upvote count
     run(
       `UPDATE forum_replies SET upvotes = upvotes + 1 WHERE id = ?`,
       [id]
     );
 
-    // Get new upvote count
     const replies = query(
       `SELECT upvotes FROM forum_replies WHERE id = ?`,
       [id]
@@ -442,6 +421,72 @@ export async function upvoteReply(req, res) {
   }
 }
 
+/**
+ * Accept a reply as the answer to a question (admin only)
+ * POST /api/forum/questions/:questionId/accept/:replyId
+ */
+export async function acceptAnswer(req, res) {
+  try {
+    const { questionId, replyId } = req.params;
+
+    // Verify question exists
+    const questions = query('SELECT id FROM forum_questions WHERE id = ?', [questionId]);
+    if (questions.length === 0) {
+      return res.status(404).json({ success: false, error: 'Question not found' });
+    }
+
+    // Verify reply exists and belongs to question
+    const replies = query(
+      'SELECT id FROM forum_replies WHERE id = ? AND question_id = ?',
+      [replyId, questionId]
+    );
+    if (replies.length === 0) {
+      return res.status(404).json({ success: false, error: 'Reply not found for this question' });
+    }
+
+    // Clear any previously accepted answer for this question
+    run(
+      'UPDATE forum_replies SET is_accepted_answer = 0 WHERE question_id = ?',
+      [questionId]
+    );
+
+    // Mark the reply as accepted
+    run('UPDATE forum_replies SET is_accepted_answer = 1 WHERE id = ?', [replyId]);
+
+    // Mark the question as answered
+    run('UPDATE forum_questions SET is_answered = 1, updated_at = datetime(\'now\') WHERE id = ?', [questionId]);
+
+    res.json({ success: true, questionId: parseInt(questionId), replyId: parseInt(replyId) });
+  } catch (error) {
+    console.error('Accept answer error:', error);
+    res.status(500).json({ success: false, error: 'Failed to accept answer' });
+  }
+}
+
+/**
+ * Remove the accepted answer from a question (admin only)
+ * DELETE /api/forum/questions/:questionId/accept
+ */
+export async function removeAcceptedAnswer(req, res) {
+  try {
+    const { questionId } = req.params;
+
+    run(
+      'UPDATE forum_replies SET is_accepted_answer = 0 WHERE question_id = ?',
+      [questionId]
+    );
+    run(
+      'UPDATE forum_questions SET is_answered = 0, updated_at = datetime(\'now\') WHERE id = ?',
+      [questionId]
+    );
+
+    res.json({ success: true, questionId: parseInt(questionId) });
+  } catch (error) {
+    console.error('Remove accepted answer error:', error);
+    res.status(500).json({ success: false, error: 'Failed to remove accepted answer' });
+  }
+}
+
 export default {
   createQuestion,
   listQuestions,
@@ -449,5 +494,7 @@ export default {
   addReply,
   upvoteQuestion,
   removeUpvoteQuestion,
-  upvoteReply
+  upvoteReply,
+  acceptAnswer,
+  removeAcceptedAnswer
 };
