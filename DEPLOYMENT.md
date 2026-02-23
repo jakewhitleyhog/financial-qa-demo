@@ -44,8 +44,12 @@ This guide shows how to deploy your Customer Q&A webapp so you can share it with
      ```
      NODE_ENV=production
      PORT=3000
+     JWT_SECRET=generate-a-random-32-char-string
+     DEAL_NAME=Huntington Oil & Gas II
+     DEAL_ID=1
      ANTHROPIC_API_KEY=your_api_key_here (optional for forum demo)
      ```
+   - **JWT_SECRET is required** in production. Generate one with: `openssl rand -hex 32`
 
 5. **Save the Backend URL**
    - After deployment, you'll get a URL like: `https://financial-qa-backend.onrender.com`
@@ -177,6 +181,9 @@ If you want to deploy everything to Vercel (requires more setup):
 ```env
 NODE_ENV=production
 PORT=3000
+JWT_SECRET=your-random-secret-here
+DEAL_NAME=Huntington Oil & Gas II
+DEAL_ID=1
 ANTHROPIC_API_KEY=sk-ant-... (optional)
 FRONTEND_URL=https://your-app.vercel.app
 ```

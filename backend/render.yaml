@@ -10,6 +10,12 @@ services:
       - key: PORT
         value: 3000
       - key: FRONTEND_URL
-        fromGroup: frontend-url
+        sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: DEAL_NAME
+        value: Huntington Oil & Gas II
+      - key: DEAL_ID
+        value: 1
