@@ -1,0 +1,21 @@
+{
+  "project": "financial-qa-demo",
+  "branchName": "ralph/fix-spa-refresh-404",
+  "description": "Fix 404 on page refresh — add catch-all rewrite to vercel.json so React Router handles all client-side routes",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add catch-all rewrite to vercel.json",
+      "description": "As a user, I want to be able to refresh any page without getting a 404 so I can navigate naturally.",
+      "acceptanceCriteria": [
+        "vercel.json has a catch-all rewrite: source '/(.*)', destination '/index.html'",
+        "The /api/:path* rewrite remains first and is unchanged",
+        "The catch-all rewrite is last in the rewrites array",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
