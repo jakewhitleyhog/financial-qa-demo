@@ -1,0 +1,34 @@
+{
+  "project": "financial-qa-demo",
+  "branchName": "ralph/reply-upvote-guards",
+  "description": "Reply Upvote Guards — defensive fixes for onRemoveUpvote prop guard and 404 for non-existent reply",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add prop guard for onRemoveUpvote in ReplyThread",
+      "description": "As a developer, I want ReplyThread to be safe to use without onRemoveUpvote so future consumers don't crash unexpectedly.",
+      "acceptanceCriteria": [
+        "onRemoveUpvote defaults to a no-op (= () => {}) in the function signature of ReplyThread.jsx",
+        "No other behavior changes to ReplyThread",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Closes GitHub issue #8"
+    },
+    {
+      "id": "US-002",
+      "title": "Return 404 for non-existent reply in removeUpvoteReply",
+      "description": "As a developer, I want the DELETE endpoint to return 404 when the reply ID doesn't exist so callers get a semantically correct error.",
+      "acceptanceCriteria": [
+        "removeUpvoteReply in forumController.js checks SELECT id FROM forum_replies WHERE id = ? before the delete",
+        "If the reply does not exist, returns 404 with { success: false, error: 'Reply not found' }",
+        "If the reply exists but the investor has not upvoted it, still returns 400 with the existing error message",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Closes GitHub issue #9"
+    }
+  ]
+}
