@@ -57,7 +57,7 @@ export function QuestionDetail({ questionId, onBack }) {
 
   const handleAddReply = async (data) => {
     const result = await forumAPI.addReply(questionId, data.body, data.parentReplyId);
-    setReplies(prev => [...prev, result.reply]);
+    setReplies(prev => [...prev, { ...result.reply, isUpvoted: false }]);
     setShowReplyForm(false);
   };
 

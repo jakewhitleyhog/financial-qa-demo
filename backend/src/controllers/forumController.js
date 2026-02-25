@@ -444,7 +444,7 @@ export async function removeUpvoteReply(req, res) {
     }
 
     run(
-      `UPDATE forum_replies SET upvotes = upvotes - 1 WHERE id = ?`,
+      `UPDATE forum_replies SET upvotes = MAX(0, upvotes - 1) WHERE id = ?`,
       [id]
     );
 
