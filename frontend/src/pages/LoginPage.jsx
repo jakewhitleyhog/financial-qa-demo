@@ -50,7 +50,7 @@ export function LoginPage() {
             onError={(e) => { e.target.style.display = 'none'; }}
           />
           <h1 className="text-2xl font-bold text-foreground">{DEAL_NAME}</h1>
-          <p className="text-muted-foreground mt-1">Investor Portal</p>
+          <p className="text-muted-foreground mt-1">Investment Details and Question Board</p>
         </div>
 
         <Card>
