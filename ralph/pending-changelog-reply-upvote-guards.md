@@ -24,3 +24,7 @@ Both issues were follow-ups from PR #7 (Reply Upvote Toggle). The `onRemoveUpvot
 
 ### Potential Follow-Up Issues
 - None identified.
+
+### Post-Review Bug Fixes (same PR)
+- `ReplyThread.jsx`: `onUpvote` also defaulted to no-op (was missed alongside `onRemoveUpvote` in the original fix)
+- `forumController.js`: `upvoteReply` (POST) now also checks reply existence and returns 404 if not found — symmetrical with the fix applied to `removeUpvoteReply`
