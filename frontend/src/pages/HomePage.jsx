@@ -3,7 +3,7 @@
  * Investor portal landing page with deal overview and navigation
  */
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,6 +13,7 @@ const DEAL_NAME = import.meta.env.VITE_DEAL_NAME || 'Investor Portal';
 
 export function HomePage() {
   const { investor } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -96,18 +97,20 @@ export function HomePage() {
           </CardHeader>
           <CardContent>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
-              <Link to="/chat" className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
-                "What are the Tier 1 well economics?"
-              </Link>
-              <Link to="/chat" className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
-                "Show me projected production by year"
-              </Link>
-              <Link to="/chat" className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
-                "What is the target IRR and MOIC?"
-              </Link>
-              <Link to="/chat" className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
-                "What are the price sensitivities?"
-              </Link>
+              {[
+                'What are the Tier 1 well economics?',
+                'Show me projected production by year',
+                'What is the target IRR and MOIC?',
+                'What are the price sensitivities?',
+              ].map((question) => (
+                <button
+                  key={question}
+                  onClick={() => navigate('/chat', { state: { prefill: question } })}
+                  className="block p-3 rounded-lg bg-muted hover:bg-muted/80 transition-colors text-left cursor-pointer"
+                >
+                  "{question}"
+                </button>
+              ))}
             </div>
           </CardContent>
         </Card>
