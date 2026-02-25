@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
@@ -24,6 +25,8 @@ export function ChatInterface({ sessionId = null }) {
   } = useChatSession(sessionId);
 
   const messagesEndRef = useRef(null);
+  const location = useLocation();
+  const prefillSent = useRef(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -36,6 +39,14 @@ export function ChatInterface({ sessionId = null }) {
       createSession().catch(console.error);
     }
   }, [sessionId, sessionInfo, loading, createSession]);
+
+  // Auto-send prefilled question from Quick Start
+  useEffect(() => {
+    if (sessionInfo && location.state?.prefill && !prefillSent.current) {
+      prefillSent.current = true;
+      sendMessage(location.state.prefill).catch(console.error);
+    }
+  }, [sessionInfo, location.state, sendMessage]);
 
   const handleSendMessage = async (messageText) => {
     try {
@@ -50,7 +61,7 @@ export function ChatInterface({ sessionId = null }) {
       <CardHeader>
         <CardTitle>Deal AI Assistant</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Ask questions about deal performance, occupancy, NOI, distributions, and more
+          Ask questions about well economics, production, returns, and more
         </p>
       </CardHeader>
 
@@ -68,9 +79,9 @@ export function ChatInterface({ sessionId = null }) {
               <div className="text-sm space-y-2">
                 <p className="font-medium">Example questions:</p>
                 <ul className="text-left space-y-1">
-                  <li>• What is the current occupancy rate?</li>
-                  <li>• Show me the NOI trend over the past year</li>
-                  <li>• When was the last distribution?</li>
+                  <li>• What are the Tier 1 well economics?</li>
+                  <li>• Show me projected production by year</li>
+                  <li>• What is the target IRR and MOIC?</li>
                 </ul>
               </div>
             </div>
@@ -99,7 +110,7 @@ export function ChatInterface({ sessionId = null }) {
           placeholder={
             sending
               ? 'Sending...'
-              : 'Ask about deal performance, occupancy, NOI, distributions...'
+              : 'Ask about well economics, production, returns, price sensitivities...'
           }
         />
 
@@ -109,26 +120,26 @@ export function ChatInterface({ sessionId = null }) {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSendMessage("What is the current occupancy rate?")}
+              onClick={() => handleSendMessage("What are the Tier 1 well economics?")}
               disabled={!sessionInfo || sending}
             >
-              Occupancy
+              Well Economics
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSendMessage("Show me the NOI trend over the past year")}
+              onClick={() => handleSendMessage("Show me projected production by year")}
               disabled={!sessionInfo || sending}
             >
-              NOI Trend
+              Production
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleSendMessage("What was the most recent distribution amount?")}
+              onClick={() => handleSendMessage("What is the target IRR and MOIC?")}
               disabled={!sessionInfo || sending}
             >
-              Distributions
+              Returns
             </Button>
           </div>
         )}
