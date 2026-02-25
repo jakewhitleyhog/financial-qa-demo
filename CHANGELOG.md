@@ -36,3 +36,7 @@ Users could upvote a reply but had no way to remove the upvote. The button was p
 
 ### Potential Follow-Up Issues
 - The inline upvote button in `ReplyThread.jsx` duplicates logic from the shared `UpvoteButton` component. Consider refactoring `ReplyThread` to use `UpvoteButton` for consistency.
+
+### Post-Review Bug Fixes (same PR)
+- `QuestionDetail.jsx`: Newly added replies now explicitly include `isUpvoted: false` in local state to ensure consistent toggle behavior without a page reload
+- `forumController.js`: `removeUpvoteReply` now uses `MAX(0, upvotes - 1)` to prevent the upvote counter from going below zero in edge cases
