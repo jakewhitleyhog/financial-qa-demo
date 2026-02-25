@@ -1,52 +1,20 @@
 {
   "project": "financial-qa-demo",
-  "branchName": "ralph/reply-upvote-toggle",
-  "description": "Reply Upvote Toggle - Allow users to remove their upvote from a forum reply by clicking the upvote button again",
+  "branchName": "ralph/fix-spa-refresh-404",
+  "description": "Fix 404 on page refresh — add catch-all rewrite to vercel.json so React Router handles all client-side routes",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Add removeUpvoteReply backend endpoint",
-      "description": "As a developer, I need a DELETE endpoint to remove a reply upvote so the frontend can toggle it off.",
+      "title": "Add catch-all rewrite to vercel.json",
+      "description": "As a user, I want to be able to refresh any page without getting a 404 so I can navigate naturally.",
       "acceptanceCriteria": [
-        "removeUpvoteReply function added to forumController.js, mirroring removeUpvoteQuestion",
-        "DELETE /api/forum/replies/:id/upvote route registered in forum.js",
-        "Returns { success: true, upvotes: <updated count> }",
-        "If the investor has not upvoted the reply, returns 400 with appropriate error",
+        "vercel.json has a catch-all rewrite: source '/(.*)', destination '/index.html'",
+        "The /api/:path* rewrite remains first and is unchanged",
+        "The catch-all rewrite is last in the rewrites array",
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-002",
-      "title": "Add removeUpvoteReply to frontend API service",
-      "description": "As a developer, I need the frontend API client to support the remove reply upvote endpoint.",
-      "acceptanceCriteria": [
-        "removeUpvoteReply(replyId) function added to forumAPI in api.js",
-        "Calls DELETE /api/forum/replies/:id/upvote",
-        "Typecheck passes"
-      ],
-      "priority": 2,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-003",
-      "title": "Wire up toggle in QuestionDetail and ReplyThread",
-      "description": "As a user, I want to click an upvoted reply's upvote button to remove my upvote so I can correct accidental upvotes.",
-      "acceptanceCriteria": [
-        "handleRemoveUpvoteReply(replyId) added to QuestionDetail.jsx, calls forumAPI.removeUpvoteReply",
-        "On success, updates the reply's upvotes count and sets isUpvoted: false in local state",
-        "onRemoveUpvote prop passed from QuestionDetail to ReplyThread",
-        "ReplyThread.jsx accepts onRemoveUpvote prop",
-        "Upvote button in ReplyThread.jsx is NOT disabled when isUpvoted is true",
-        "Clicking an already-upvoted reply button calls onRemoveUpvote, not onUpvote",
-        "Button visual state reflects upvoted vs not-upvoted correctly",
-        "Typecheck passes"
-      ],
-      "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]
