@@ -133,6 +133,13 @@ export const forumAPI = {
     });
   },
 
+  removeUpvoteReply: async (id) => {
+    return fetchAPI(`/forum/replies/${id}/upvote`, {
+      method: 'DELETE',
+      body: JSON.stringify({}),
+    });
+  },
+
   // Admin: accept a reply as the answer
   acceptAnswer: async (questionId, replyId) => {
     return fetchAPI(`/forum/questions/${questionId}/accept/${replyId}`, {

@@ -422,6 +422,52 @@ export async function upvoteReply(req, res) {
 }
 
 /**
+ * Remove upvote from a reply
+ * DELETE /api/forum/replies/:id/upvote
+ */
+export async function removeUpvoteReply(req, res) {
+  try {
+    const { id } = req.params;
+    const investorId = req.investor.id;
+
+    const result = run(
+      `DELETE FROM forum_upvotes
+       WHERE investor_id = ? AND target_type = 'reply' AND target_id = ?`,
+      [investorId, id]
+    );
+
+    if (result.changes === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'You have not upvoted this reply'
+      });
+    }
+
+    run(
+      `UPDATE forum_replies SET upvotes = upvotes - 1 WHERE id = ?`,
+      [id]
+    );
+
+    const replies = query(
+      `SELECT upvotes FROM forum_replies WHERE id = ?`,
+      [id]
+    );
+
+    res.json({
+      success: true,
+      upvotes: replies[0]?.upvotes || 0
+    });
+
+  } catch (error) {
+    console.error('Remove reply upvote error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to remove reply upvote'
+    });
+  }
+}
+
+/**
  * Accept a reply as the answer to a question (admin only)
  * POST /api/forum/questions/:questionId/accept/:replyId
  */
@@ -495,6 +541,7 @@ export default {
   upvoteQuestion,
   removeUpvoteQuestion,
   upvoteReply,
+  removeUpvoteReply,
   acceptAnswer,
   removeAcceptedAnswer
 };

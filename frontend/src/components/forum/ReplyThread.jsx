@@ -10,7 +10,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { ArrowUp, MessageSquare, CheckCircle } from 'lucide-react';
 
-export function ReplyThread({ replies, onAddReply, onUpvote }) {
+export function ReplyThread({ replies, onAddReply, onUpvote, onRemoveUpvote }) {
   const [replyingTo, setReplyingTo] = useState(null);
 
   // Build tree structure from flat list
@@ -33,11 +33,15 @@ export function ReplyThread({ replies, onAddReply, onUpvote }) {
     return roots;
   };
 
-  const handleUpvote = async (replyId) => {
+  const handleUpvoteToggle = async (reply) => {
     try {
-      await onUpvote(replyId);
+      if (reply.isUpvoted) {
+        await onRemoveUpvote(reply.id);
+      } else {
+        await onUpvote(reply.id);
+      }
     } catch (err) {
-      console.error('Failed to upvote:', err);
+      console.error('Failed to toggle upvote:', err);
     }
   };
 
@@ -57,14 +61,13 @@ export function ReplyThread({ replies, onAddReply, onUpvote }) {
           {/* Upvote button */}
           <div className="flex flex-col items-center gap-1">
             <button
-              onClick={() => handleUpvote(reply.id)}
-              disabled={reply.isUpvoted}
+              onClick={() => handleUpvoteToggle(reply)}
               className={`p-1 rounded transition-colors ${
                 reply.isUpvoted
-                  ? 'text-primary bg-primary/10 cursor-default'
+                  ? 'text-primary bg-primary/10 hover:bg-primary/20'
                   : 'text-muted-foreground hover:text-primary hover:bg-muted'
               }`}
-              title={reply.isUpvoted ? 'Already upvoted' : 'Upvote this reply'}
+              title={reply.isUpvoted ? 'Remove upvote' : 'Upvote this reply'}
             >
               <ArrowUp className="h-4 w-4" />
             </button>

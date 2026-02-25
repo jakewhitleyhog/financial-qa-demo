@@ -72,6 +72,17 @@ export function QuestionDetail({ questionId, onBack }) {
     }
   };
 
+  const handleRemoveUpvoteReply = async (replyId) => {
+    try {
+      const result = await forumAPI.removeUpvoteReply(replyId);
+      setReplies(prev => prev.map(r =>
+        r.id === replyId ? { ...r, upvotes: result.upvotes, isUpvoted: false } : r
+      ));
+    } catch (err) {
+      console.error('Failed to remove reply upvote:', err);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -186,6 +197,7 @@ export function QuestionDetail({ questionId, onBack }) {
           replies={replies}
           onAddReply={handleAddReply}
           onUpvote={handleUpvoteReply}
+          onRemoveUpvote={handleRemoveUpvoteReply}
         />
       </Card>
     </div>

@@ -12,6 +12,7 @@ import {
   upvoteQuestion,
   removeUpvoteQuestion,
   upvoteReply,
+  removeUpvoteReply,
   acceptAnswer,
   removeAcceptedAnswer
 } from '../controllers/forumController.js';
@@ -31,6 +32,7 @@ router.post('/questions/:id/reply', addReply);
 router.post('/questions/:id/upvote', upvoteQuestion);
 router.delete('/questions/:id/upvote', removeUpvoteQuestion);
 router.post('/replies/:id/upvote', upvoteReply);
+router.delete('/replies/:id/upvote', removeUpvoteReply);
 
 // Accepted answers (admin only)
 router.post('/questions/:questionId/accept/:replyId', requireAdmin, acceptAnswer);
