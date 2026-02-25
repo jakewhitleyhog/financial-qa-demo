@@ -57,7 +57,7 @@ export function QuestionDetail({ questionId, onBack }) {
 
   const handleAddReply = async (data) => {
     const result = await forumAPI.addReply(questionId, data.body, data.parentReplyId);
-    setReplies(prev => [...prev, result.reply]);
+    setReplies(prev => [...prev, { ...result.reply, isUpvoted: false }]);
     setShowReplyForm(false);
   };
 
@@ -69,6 +69,17 @@ export function QuestionDetail({ questionId, onBack }) {
       ));
     } catch (err) {
       console.error('Failed to upvote reply:', err);
+    }
+  };
+
+  const handleRemoveUpvoteReply = async (replyId) => {
+    try {
+      const result = await forumAPI.removeUpvoteReply(replyId);
+      setReplies(prev => prev.map(r =>
+        r.id === replyId ? { ...r, upvotes: result.upvotes, isUpvoted: false } : r
+      ));
+    } catch (err) {
+      console.error('Failed to remove reply upvote:', err);
     }
   };
 
@@ -186,6 +197,7 @@ export function QuestionDetail({ questionId, onBack }) {
           replies={replies}
           onAddReply={handleAddReply}
           onUpvote={handleUpvoteReply}
+          onRemoveUpvote={handleRemoveUpvoteReply}
         />
       </Card>
     </div>

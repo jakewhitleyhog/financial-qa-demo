@@ -36,15 +36,15 @@ Refreshing any page on the Vercel-deployed app returned a 404. Vercel serves sta
 **PR:** #7
 
 ### What Was Changed
-- Backend: Added `removeUpvoteReply` function to `forumController.js`
+- Backend: Added `removeUpvoteReply` function to `forumController.js` — deletes the upvote record from `forum_upvotes` and decrements `forum_replies.upvotes`
 - Backend: Registered `DELETE /api/forum/replies/:id/upvote` route in `forum.js`
-- Frontend: Added `removeUpvoteReply(id)` to `forumAPI` in `api.js`
-- Frontend: Added `handleRemoveUpvoteReply(replyId)` to `QuestionDetail.jsx`
+- Frontend: Added `removeUpvoteReply(id)` to `forumAPI` in `api.js` — calls the new DELETE endpoint
+- Frontend: Added `handleRemoveUpvoteReply(replyId)` to `QuestionDetail.jsx` — updates local reply state on success
 - Frontend: Passed `onRemoveUpvote` prop from `QuestionDetail` down to `ReplyThread`
-- Frontend: Updated `ReplyThread.jsx` — removed `disabled={reply.isUpvoted}`, added toggle logic
+- Frontend: Updated `ReplyThread.jsx` — removed `disabled={reply.isUpvoted}`, replaced `handleUpvote` with `handleUpvoteToggle` that calls add or remove based on current state
 
 ### Why It Was Changed
-Users could upvote a reply but had no way to remove the upvote. The button was permanently disabled after clicking. The fix adds the missing backend endpoint and wires the frontend to call add vs. remove based on `reply.isUpvoted`.
+Users could upvote a reply but had no way to remove the upvote. The button was permanently disabled after clicking. This mirrors the existing question upvote toggle, which was already fully implemented. The fix adds the missing backend endpoint and wires the frontend to call add vs. remove based on `reply.isUpvoted`.
 
 ### Files Modified
 | File | Change Type | Description |
@@ -54,14 +54,17 @@ Users could upvote a reply but had no way to remove the upvote. The button was p
 | `frontend/src/services/api.js` | Modified | Added `removeUpvoteReply` to `forumAPI` |
 | `frontend/src/components/forum/QuestionDetail.jsx` | Modified | Added `handleRemoveUpvoteReply`, passed to ReplyThread |
 | `frontend/src/components/forum/ReplyThread.jsx` | Modified | Toggle upvote logic, removed disabled state |
+| `ralph/prd.json` | Added | Ralph PRD for this feature |
+| `tasks/prd-reply-upvote-toggle.md` | Added | PRD document |
 
 ### Known Risks & Side Effects
-- The `onRemoveUpvote` prop is new on `ReplyThread`; any future consumer that omits it will throw a runtime error when clicking an upvoted reply. GitHub issue #8 tracks this.
+- `ReplyThread.jsx` is used in `QuestionDetail.jsx` only — no other consumers affected
+- The `onRemoveUpvote` prop is new; any future use of `ReplyThread` without it will silently fail to remove upvotes (the toggle will call `undefined`). Future consumers must pass both `onUpvote` and `onRemoveUpvote`.
 
 ### Potential Follow-Up Issues
-- See GitHub issue #8: `ReplyThread` needs a prop guard for `onRemoveUpvote`
-- See GitHub issue #9: `DELETE /replies/:id/upvote` returns 400 instead of 404 for non-existent reply IDs
+- The inline upvote button in `ReplyThread.jsx` duplicates logic from the shared `UpvoteButton` component. Consider refactoring `ReplyThread` to use `UpvoteButton` for consistency.
 
 ### Post-Review Bug Fixes (same PR)
-- `QuestionDetail.jsx`: Newly added replies explicitly include `isUpvoted: false` in local state
-- `forumController.js`: `removeUpvoteReply` uses `MAX(0, upvotes - 1)` to prevent negative counts
+- `QuestionDetail.jsx`: Newly added replies now explicitly include `isUpvoted: false` in local state to ensure consistent toggle behavior without a page reload
+- `forumController.js`: `removeUpvoteReply` now uses `MAX(0, upvotes - 1)` to prevent the upvote counter from going below zero in edge cases
+
