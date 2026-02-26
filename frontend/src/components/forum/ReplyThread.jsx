@@ -10,7 +10,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { ArrowUp, MessageSquare, CheckCircle } from 'lucide-react';
 
-export function ReplyThread({ replies, onAddReply, onUpvote, onRemoveUpvote }) {
+export function ReplyThread({ replies, onAddReply, onUpvote = () => {}, onRemoveUpvote = () => {} }) {
   const [replyingTo, setReplyingTo] = useState(null);
 
   // Build tree structure from flat list

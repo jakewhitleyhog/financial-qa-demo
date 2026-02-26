@@ -378,6 +378,11 @@ export async function upvoteReply(req, res) {
     const { id } = req.params;
     const investorId = req.investor.id;
 
+    const replyExists = query(`SELECT id FROM forum_replies WHERE id = ?`, [id]);
+    if (replyExists.length === 0) {
+      return res.status(404).json({ success: false, error: 'Reply not found' });
+    }
+
     const existing = query(
       `SELECT * FROM forum_upvotes
        WHERE investor_id = ? AND target_type = 'reply' AND target_id = ?`,
@@ -429,6 +434,11 @@ export async function removeUpvoteReply(req, res) {
   try {
     const { id } = req.params;
     const investorId = req.investor.id;
+
+    const replyExists = query(`SELECT id FROM forum_replies WHERE id = ?`, [id]);
+    if (replyExists.length === 0) {
+      return res.status(404).json({ success: false, error: 'Reply not found' });
+    }
 
     const result = run(
       `DELETE FROM forum_upvotes
