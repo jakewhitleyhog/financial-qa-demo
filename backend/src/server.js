@@ -21,6 +21,7 @@ import authRoutes from './routes/auth.js';
 import chatRoutes from './routes/chat.js';
 import forumRoutes from './routes/forum.js';
 import routingRoutes from './routes/routing.js';
+import dealRoutes from './routes/deals.js';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -89,6 +90,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/chat', requireAuth, chatLimiter, chatRoutes);
 app.use('/api/forum', requireAuth, forumRoutes);
 app.use('/api/routing', requireAuth, routingRoutes);
+app.use('/api/deals', requireAuth, dealRoutes);
 
 // ============================================
 // ERROR HANDLING
