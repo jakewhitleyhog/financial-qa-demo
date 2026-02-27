@@ -60,6 +60,21 @@ function ChartTooltip({ active, payload, label, valuePrefix = '', valueSuffix = 
   );
 }
 
+// ── Pie chart label rendered inside the arc ───────────────────────────────────
+const RADIAN = Math.PI / 180;
+function PieSliceLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
+  if (percent < 0.08) return null; // skip slices too small for readable text
+  const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + r * Math.cos(-midAngle * RADIAN);
+  const y = cy + r * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central"
+          fontSize={12} fontWeight={600}>
+      {`${Math.round(percent * 100)}%`}
+    </text>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [data, setData] = useState(null);
@@ -220,7 +235,7 @@ export default function DashboardPage() {
                   outerRadius={95}
                   paddingAngle={2}
                   dataKey="value"
-                  label={({ value }) => `${value}%`}
+                  label={PieSliceLabel}
                   labelLine={false}
                 >
                   {pieData.map((_, i) => (
