@@ -5,8 +5,9 @@ import { ForumPage } from './pages/ForumPage';
 import { ChatPage } from './pages/ChatPage';
 import { LoginPage } from './pages/LoginPage';
 import { VerifyPage } from './pages/VerifyPage';
+import DashboardPage from './pages/DashboardPage';
 import { Button } from './components/ui/Button';
-import { Home, MessageSquare, Bot, LogOut, Loader2 } from 'lucide-react';
+import { Home, MessageSquare, Bot, LogOut, Loader2, LayoutDashboard } from 'lucide-react';
 
 const DEAL_NAME = import.meta.env.VITE_DEAL_NAME || 'Investor Portal';
 
@@ -65,6 +66,13 @@ function Navigation() {
               </Button>
             </Link>
 
+            <Link to="/dashboard">
+              <Button variant={isActive('/dashboard') ? 'default' : 'ghost'} size="sm">
+                <LayoutDashboard className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
+            </Link>
+
             <Link to="/chat">
               <Button variant={isActive('/chat') ? 'default' : 'ghost'} size="sm">
                 <Bot className="h-4 w-4 mr-2" />
@@ -120,6 +128,16 @@ function AppContent() {
             <ProtectedRoute>
               <Navigation />
               <main><ChatPage /></main>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Navigation />
+              <main><DashboardPage /></main>
             </ProtectedRoute>
           }
         />

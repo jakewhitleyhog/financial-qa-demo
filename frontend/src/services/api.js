@@ -190,8 +190,19 @@ export const routingAPI = {
   },
 };
 
+// ============================================
+// DEAL DATA API
+// ============================================
+
+export const dealAPI = {
+  getSummary: async () => {
+    return fetchAPI('/deals/summary');
+  },
+};
+
 export default {
   chatAPI,
   forumAPI,
   routingAPI,
+  dealAPI,
 };
