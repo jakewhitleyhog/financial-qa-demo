@@ -1,12 +1,14 @@
--- Seed data for Huntington Oil & Gas II / WEM Uintah V Investor Portal
--- Data sourced from Bridgeland Project documents and financial model
+-- Seed data for Huntington Oil & Gas II Investor Portal
+-- Source: Bridgeland Project documents (WEM Uintah V / WEM V)
+-- Financial figures scaled to Huntington Oil & Gas II's 11% working interest.
+-- TODO: Replace with Huntington-specific valuation model when available.
 
 -- =============================
 -- DEAL
 -- =============================
 
 INSERT INTO deals (name, entity_name, deal_type, basin, state, leasehold_acres, mineral_acres, surface_acres, total_wells_planned, capital_raise_target, target_irr, target_moic, return_of_capital_years, expected_hold_period, management_fee_structure, management_promote, fund_breakeven_oil_price, status, vintage_year) VALUES
-('Huntington Oil & Gas II', 'WEM Uintah V, LLC', 'oil_gas', 'Uinta Basin', 'UT', 13800, 3170, 2422, 70, 220000000, 20.0, 3.3, 4.4, 5, 'One-time cost plus 10% as debt and equity capital is deployed. Corporate G&A shared across all WEM entities ($6MM gross, est. $1.5MM net to WEM V).', 30.0, 45.00, 'active', 2024);
+('Huntington Oil & Gas II', 'Huntington Oil & Gas II, LLC', 'oil_gas', 'Uinta Basin', 'UT', 13800, 3170, 2422, 70, 24200000, 20.0, 3.3, 4.4, 5, 'One-time cost plus 10% as debt and equity capital is deployed. Corporate G&A shared across all WEM entities ($6MM gross, est. $1.5MM net to WEM V).', 30.0, 45.00, 'active', 2024);
 
 -- =============================
 -- WELLS (from Schedule sheet - all 70 wells)
@@ -99,41 +101,46 @@ INSERT INTO well_type_economics (deal_id, tier_name, location_count, pct_of_inve
 -- ANNUAL FINANCIALS
 -- =============================
 
+-- All dollar and production values scaled to Huntington's 11% working interest in WEM V.
+-- gross_producing_wells left at program level (Huntington participates in the same physical wells).
 INSERT INTO annual_financials (deal_id, period_year, oil_revenue, gas_revenue, total_revenue, total_operating_expenses, operating_income, net_income, capex_drilling, capex_completion, total_capex, avg_daily_oil_bopd, avg_daily_gas_mcfpd, avg_daily_total_boepd, total_oil_production_bbl, total_gas_production_mcf, gross_producing_wells, investor_distributions, report_date) VALUES
-(1, 2024, 3457035, 30167, 3487201, 572471, 3395951, 2195951, 19667561, 12991550, 170259389, 222.0, 62.0, 232.3, 54016, 15083, 4.4, 0, '2024-12-31'),
-(1, 2025, 168841555, 2661803, 171503358, 22870979, 152245655, 147520655, 77432774, 104074532, 199658037, 7227.8, 3646.3, 7835.5, 2638149, 1330902, 17.3, 0, '2025-12-31'),
-(1, 2026, 250840798, 6422913, 257263711, 36087865, 227139489, 223494489, 67601351, 106236185, 191221290, 10738.0, 8798.5, 12204.5, 3919387, 3211456, 40.5, 0, '2026-12-31'),
-(1, 2027, 279625690, 7476571, 287102261, 42898971, 252495563, 203560563, 58952602, 112188316, 188255010, 11970.3, 10241.9, 13677.3, 4369151, 3738285, 62.2, 47000000, '2027-12-31'),
-(1, 2028, 192247402, 6236335, 198483737, 30875426, 172944387, -24500452, 0, 0, 0, 8229.8, 8542.9, 9653.6, 3003866, 3118167, 71.2, 188632411, '2028-12-31'),
-(1, 2029, 118142163, 4262056, 122404219, 20842310, 104819421, -6782133, 0, 0, 0, 5057.5, 5838.4, 6030.5, 1845971, 2131028, 71.0, 76861088, '2029-12-31'),
-(1, 2030, 89397790, 3289054, 92686844, 16983695, 78154233, -3271042, 0, 0, 0, 3827.0, 4505.6, 4577.9, 1396840, 1644527, 71.0, 55737692, '2030-12-31');
+(1, 2024, 380274, 3318, 383592, 62972, 373555, 241555, 2163432, 1429071, 18728533, 24.4, 6.8, 25.6, 5942, 1659, 4.4, 0, '2024-12-31'),
+(1, 2025, 18572571, 292798, 18865369, 2515808, 16747022, 16227272, 8517605, 11448199, 21962384, 795.1, 401.1, 861.9, 290196, 146399, 17.3, 0, '2025-12-31'),
+(1, 2026, 27592488, 706520, 28299008, 3969665, 24985344, 24584394, 7436149, 11685980, 21034342, 1181.2, 967.8, 1342.5, 431133, 353260, 40.5, 0, '2026-12-31'),
+(1, 2027, 30758826, 822423, 31581249, 4718887, 27774512, 22391662, 6484786, 12340715, 20708051, 1316.7, 1126.6, 1504.5, 480607, 411211, 62.2, 5170000, '2027-12-31'),
+(1, 2028, 21147214, 685997, 21833211, 3396297, 19023883, -2695050, 0, 0, 0, 905.3, 939.7, 1061.9, 330425, 342998, 71.2, 20749565, '2028-12-31'),
+(1, 2029, 12995638, 468826, 13464464, 2292654, 11530136, -746035, 0, 0, 0, 556.3, 642.2, 663.4, 203057, 234413, 71.0, 8454720, '2029-12-31'),
+(1, 2030, 9833757, 361796, 10195553, 1868206, 8596966, -359815, 0, 0, 0, 421.0, 495.6, 503.6, 153652, 180898, 71.0, 6131146, '2030-12-31');
 
 -- =============================
 -- PROJECTED RETURNS
 -- =============================
 
+-- Capital amounts at Huntington's 11% WI; IRR/MOIC/ROC years unchanged (rate metrics)
 INSERT INTO projected_returns (deal_id, scenario, capital_invested, capital_returned, moic, irr, return_of_capital_years, return_of_capital_date) VALUES
-(1, 'invest_and_hold', 220000000, 718000000, 3.3, 20.0, 4.4, '2028-11-30'),
-(1, 'exit_at_year_5', 220000000, 617000000, 2.8, 28.0, 4.4, '2028-11-30');
+(1, 'invest_and_hold', 24200000, 78980000, 3.3, 20.0, 4.4, '2028-11-30'),
+(1, 'exit_at_year_5', 24200000, 67870000, 2.8, 28.0, 4.4, '2028-11-30');
 
 -- =============================
 -- PRICE SENSITIVITIES
 -- =============================
 
+-- Capital amounts at Huntington's 11% WI; IRR/MOIC/ROC years unchanged (rate metrics)
 INSERT INTO price_sensitivities (deal_id, oil_price_per_bbl, capital_invested, capital_returned, moic, irr, return_of_capital_years, return_of_capital_date) VALUES
-(1, 70, 224000000, 526000000, 2.5, 14.0, 5.4, '2029-11-30'),
-(1, 80, 220000000, 530000000, 3.3, 20.0, 4.4, '2028-11-30'),
-(1, 90, 218000000, 532000000, 4.0, 27.0, 3.8, '2028-04-30');
+(1, 70, 24640000, 57860000, 2.5, 14.0, 5.4, '2029-11-30'),
+(1, 80, 24200000, 58300000, 3.3, 20.0, 4.4, '2028-11-30'),
+(1, 90, 23980000, 58520000, 4.0, 27.0, 3.8, '2028-04-30');
 
 -- =============================
 -- CAPITAL ALLOCATION
 -- =============================
 
+-- Amounts at Huntington's 11% WI; percentages unchanged (proportional allocation stays the same)
 INSERT INTO capital_allocation (deal_id, category, percentage, amount) VALUES
-(1, 'drilling', 33, 72600000),
-(1, 'completion', 49, 107800000),
-(1, 'acquisition', 14, 30800000),
-(1, 'infrastructure', 4, 8800000);
+(1, 'drilling', 33, 7986000),
+(1, 'completion', 49, 11858000),
+(1, 'acquisition', 14, 3388000),
+(1, 'infrastructure', 4, 968000);
 
 -- =============================
 -- OPERATING ASSUMPTIONS
