@@ -220,7 +220,7 @@ export default function DashboardPage() {
                   outerRadius={95}
                   paddingAngle={2}
                   dataKey="value"
-                  label={({ name, value }) => `${name} ${value}%`}
+                  label={({ value }) => `${value}%`}
                   labelLine={false}
                 >
                   {pieData.map((_, i) => (
@@ -228,6 +228,11 @@ export default function DashboardPage() {
                   ))}
                 </Pie>
                 <Tooltip formatter={(v) => `${v}%`} />
+                <Legend
+                  iconType="circle"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
