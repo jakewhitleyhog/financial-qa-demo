@@ -7,7 +7,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
-import { MessageSquare, Bot, TrendingUp, Droplets } from 'lucide-react';
 
 const DEAL_NAME = import.meta.env.VITE_DEAL_NAME || 'Investor Portal';
 
@@ -36,10 +35,7 @@ export function HomePage() {
           {/* AI Assistant card */}
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <Bot className="h-6 w-6 text-primary" />
-                <CardTitle>AI Deal Assistant</CardTitle>
-              </div>
+              <CardTitle className="mb-2">AI Deal Assistant</CardTitle>
               <CardDescription>
                 Get instant answers about deal performance powered by AI
               </CardDescription>
@@ -61,10 +57,7 @@ export function HomePage() {
           {/* Forum card */}
           <Card>
             <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="h-6 w-6 text-primary" />
-                <CardTitle>Investor Q&A</CardTitle>
-              </div>
+              <CardTitle className="mb-2">Investor Q&A</CardTitle>
               <CardDescription>
                 Post questions and see what other investors are asking
               </CardDescription>
@@ -87,10 +80,7 @@ export function HomePage() {
         {/* Deal highlight */}
         <Card className="mt-8 border-primary/30">
           <CardHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Droplets className="h-6 w-6 text-primary" />
-              <CardTitle>Quick Start</CardTitle>
-            </div>
+            <CardTitle className="mb-2">Quick Start</CardTitle>
             <CardDescription>
               Try asking the AI assistant these questions about the deal
             </CardDescription>

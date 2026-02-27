@@ -2,6 +2,28 @@
 
 ---
 
+## [2026-02-27] — Fix: Capital Allocation Pie Chart — Percentage Labels Inside Arc
+
+**Branch:** ralph/fix-huntington-wi-financials
+**PR:** #18
+
+### What Was Changed
+- Replaced the exterior `label` renderer on the Capital Allocation donut chart with a custom `PieSliceLabel` component that draws the percentage text **inside** the arc (at the radial midpoint of each slice)
+- Slices smaller than 8% of the total are skipped (text would be unreadable); the Legend still identifies all categories
+
+### Why It Was Changed
+The Completion slice (49%) was not displaying its percentage. Root cause: Recharts computes label positions in SVG space and places them outside the arc even when `labelLine={false}`. For certain slice midpoint angles the computed coordinate falls outside the SVG viewport, silently clipping the text. Rendering inside the arc is geometrically guaranteed to stay within bounds.
+
+### Files Modified
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `frontend/src/pages/DashboardPage.jsx` | Modified | `PieSliceLabel` renders `%` text inside arc; replaces exterior label function |
+
+### Known Risks & Side Effects
+- Slices below the 8% threshold (currently Infrastructure at 4%) show no inline label. This is intentional — the slice is too narrow for readable text. Category name remains in the Legend.
+
+---
+
 ## [2026-02-27] — Fix: Scale Dashboard Financials to Huntington 11% WI + Pie Chart Label Clipping
 
 **Branch:** ralph/fix-huntington-wi-financials
