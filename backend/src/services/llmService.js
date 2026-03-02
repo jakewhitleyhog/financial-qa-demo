@@ -94,7 +94,7 @@ export async function processQuestion(userQuestion, conversationHistory = []) {
       };
     }
 
-    // Step 3: Validate and sanitize the SQL
+    // Step 2: Validate and sanitize the SQL
     const validation = validateAndSanitize(sqlGeneration.sql);
     if (!validation.isValid) {
       console.error('SQL validation failed:', validation.error);
@@ -110,7 +110,7 @@ export async function processQuestion(userQuestion, conversationHistory = []) {
       };
     }
 
-    // Step 4: Execute the SQL query
+    // Step 3: Execute the SQL query
     let results;
     try {
       results = dbQuery(validation.sanitizedQuery);
@@ -128,10 +128,10 @@ export async function processQuestion(userQuestion, conversationHistory = []) {
       };
     }
 
-    // Step 5: Format results into natural language
+    // Step 4: Format results into natural language
     const nlResponse = await formatResults(userQuestion, validation.sanitizedQuery, results, conversationHistory);
 
-    // Step 6: Return successful response with metadata
+    // Step 5: Return successful response with metadata
     return {
       success: true,
       content: nlResponse.content,
