@@ -342,3 +342,55 @@ Investors had to wait silently for 3–6 seconds while multiple Claude API calls
 ### Potential Follow-Up Issues
 - Handle client disconnect gracefully: detect `res.on('close', ...)` and skip DB writes if connection is lost before streaming completes.
 - Consider extracting the SQL generation + execution pipeline into a shared helper used by both `sendMessage()` and `streamMessage()` to reduce duplication.
+
+## [2026-03-02] — Harden OUT_OF_SCOPE check, session ownership, and scope detection config
+
+**GitHub Issues:** #25, #27, #30
+**Branch:** ralph/backend-fixes
+**PR:** #34
+
+### What Was Changed
+- `backend/src/config/claude.js`: Added `SCOPE_DETECTION_MODEL_CONFIG` constant with explicit `max_tokens: 20` and `temperature: 0.0`, so the intent of the low token cap is documented and cannot be silently broken by property reordering in a future refactor.
+- `backend/src/services/llmService.js`: Changed `OUT_OF_SCOPE` check in `generateSQL()` from substring match (`sqlQuery.includes('OUT_OF_SCOPE')`) to strict equality (`sqlQuery.trim() === 'OUT_OF_SCOPE'`) to prevent false-positives on column names or string literals that contain the substring. Updated `detectScope()` to use `SCOPE_DETECTION_MODEL_CONFIG` instead of spreading `MODEL_CONFIG` and overriding `max_tokens`.
+- `backend/src/controllers/chatController.js`: Added `AND investor_id = ?` to all three `chat_sessions` ownership checks (`getSession`, `sendMessage`, `streamMessage`) to prevent authenticated investors from reading or sending messages to sessions belonging to other investors.
+
+### Why It Was Changed
+Three low/medium risk issues identified during code reviews were addressed in a single PR to reduce noise. The most impactful is the session ownership fix (#27), which closes a medium-severity access control gap where an investor who discovered another session ID could read that session's conversation history or send messages that include the other investor's prior turns as context.
+
+### Files Modified
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `backend/src/config/claude.js` | Modified | Added `SCOPE_DETECTION_MODEL_CONFIG` constant |
+| `backend/src/services/llmService.js` | Modified | Strict OUT_OF_SCOPE equality check; use SCOPE_DETECTION_MODEL_CONFIG in detectScope() |
+| `backend/src/controllers/chatController.js` | Modified | Add investor_id guard to all session ownership queries |
+
+### Known Risks & Side Effects
+- The `AND investor_id = ?` change means any request hitting a valid session ID that belongs to a different investor now returns 404 instead of 200. This is the correct behaviour, but any client code that assumed sessions were globally accessible would break. No such client code exists currently.
+- `SCOPE_DETECTION_MODEL_CONFIG` is exported but only used by `detectScope()`, which is not called in the main pipeline (it was removed in PR #29). If `detectScope()` is removed in a future cleanup, `SCOPE_DETECTION_MODEL_CONFIG` can also be removed.
+
+### Potential Follow-Up Issues
+- None identified.
+
+## [2026-03-02] — Extract shared SQL pipeline and add disconnect guard to streaming endpoint
+
+**GitHub Issues:** #32, #33
+**Branch:** ralph/streaming-refactor
+**PR:** #35
+
+### What Was Changed
+- `backend/src/controllers/chatController.js`: Extracted `runSqlPipeline(message, conversationHistory)` — a module-level helper that encapsulates the three-step SQL pipeline (generate → validate → execute). Returns `{ success: true, sql, results }` on success or a typed error descriptor `{ success: false, errorType, sql, content, escalationReason, isInScope }` on failure. `streamMessage()` now calls `runSqlPipeline()` and handles the result through a single error path instead of three separate early-exit blocks. Also added `res.on('close', ...)` disconnect detection: if the client disconnects during streaming, the post-stream assistant message and escalation DB writes are skipped to prevent orphaned user messages.
+
+### Why It Was Changed
+`streamMessage()` previously duplicated the SQL generation, validation, and execution steps inline. Extracting them into `runSqlPipeline()` means future pipeline changes (retry logic, additional validation steps, schema changes) only need to be made in one place. The disconnect guard prevents a known data integrity issue where a user navigating away mid-stream would leave an unanswered user message in the session history.
+
+### Files Modified
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `backend/src/controllers/chatController.js` | Modified | Extracted `runSqlPipeline()` helper; refactored `streamMessage()` to use it; added `res.on('close')` disconnect guard |
+
+### Known Risks & Side Effects
+- `sendMessage()` still uses `processQuestion()` from llmService rather than `runSqlPipeline()`. There remains conceptual duplication between the pipeline inside `processQuestion()` and the new `runSqlPipeline()` helper. A future refactor could unify them, but that would require more invasive changes to llmService.
+- The disconnect guard skips the assistant message insert but does NOT delete the already-stored user message. The session will contain an orphaned user message with no assistant reply if the client disconnects. This is a known trade-off — the alternative (deleting the user message) risks data loss if the disconnect was transient.
+
+### Potential Follow-Up Issues
+- Consider whether to delete the orphaned user message on disconnect, or to mark it with a status flag (e.g., `status = 'abandoned'`) so it can be surfaced differently in the UI.
