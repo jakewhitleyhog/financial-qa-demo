@@ -83,6 +83,61 @@ export const chatAPI = {
   listSessions: async (limit = 20) => {
     return fetchAPI(`/chat/sessions?limit=${limit}`);
   },
+
+  /**
+   * Send a message and stream the response token by token.
+   * @param {string} sessionId
+   * @param {string} message
+   * @param {function(string): void} onChunk - called with each text token
+   * @param {function(object): void} [onDone] - called with done event data
+   */
+  sendMessageStream: async (sessionId, message, onChunk, onDone) => {
+    const url = `${API_BASE_URL}/chat/sessions/${sessionId}/message/stream`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+
+    if (response.status === 401) {
+      window.location.href = '/login';
+      throw new Error('Session expired. Redirecting to login...');
+    }
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Server error (${response.status}): ${text.slice(0, 100)}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep any incomplete trailing line
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') return;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.type === 'token') onChunk(parsed.content);
+          if (parsed.type === 'done') onDone?.(parsed);
+          if (parsed.type === 'error') throw new Error(parsed.message);
+        } catch (e) {
+          if (e.message !== 'Unexpected end of JSON input') throw e;
+        }
+      }
+    }
+  },
 };
 
 // ============================================

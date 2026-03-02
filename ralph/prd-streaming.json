@@ -1,0 +1,90 @@
+{
+  "project": "financial-qa-demo",
+  "branchName": "ralph/streaming",
+  "description": "Stream AI chat responses token-by-token via SSE so investors see words appear progressively instead of waiting for the full response (Issue #23)",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Add formatResultsStream() to LLM service",
+      "description": "As a developer, I need a streaming variant of formatResults() that emits tokens via a callback as Claude generates them.",
+      "acceptanceCriteria": [
+        "formatResultsStream(userQuestion, sqlQuery, results, conversationHistory, onChunk) exported from llmService.js",
+        "Uses client.messages.stream() from the Anthropic SDK to stream tokens",
+        "Calls onChunk(text) for each text_delta received",
+        "Returns the final Anthropic message object",
+        "Falls back to calling onChunk once with full text if no API key configured",
+        "npm test passes in the backend"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Add streaming message endpoint to backend",
+      "description": "As a developer, I need a POST endpoint that runs the full pipeline and streams the formatting step via SSE.",
+      "acceptanceCriteria": [
+        "New route POST /api/chat/sessions/:sessionId/message/stream added to chat.js",
+        "streamMessage() controller function added to chatController.js",
+        "Sets SSE headers (Content-Type: text/event-stream, Cache-Control: no-cache, Connection: keep-alive) before any processing",
+        "Sends error token event and closes on SQL generation/validation/execution failures",
+        "Calls formatResultsStream(), writing each chunk as SSE token event",
+        "After streaming: stores user + assistant messages in DB, runs routing analysis",
+        "Sends done event with messageId and metadata, then [DONE] sentinel",
+        "npm test passes in the backend"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Add sendMessageStream() to frontend API service",
+      "description": "As a developer, I need a client-side method to read the SSE stream and call callbacks for each token.",
+      "acceptanceCriteria": [
+        "chatAPI.sendMessageStream(sessionId, message, onChunk, onDone) added to api.js",
+        "Uses fetch with response.body.getReader() to read SSE stream",
+        "Calls onChunk(content) for type:token events",
+        "Calls onDone(data) for type:done events",
+        "Throws on type:error events",
+        "Redirects to /login on 401",
+        "Existing chatAPI.sendMessage() unchanged",
+        "Build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Update useChatSession to use streaming",
+      "description": "As an investor, I want to see the AI response appear word by word so the chat feels fast and alive.",
+      "acceptanceCriteria": [
+        "sendMessage() in useChatSession.js uses chatAPI.sendMessageStream() instead of chatAPI.sendMessage()",
+        "A streaming placeholder assistant message (isStreaming: true, content: '') added to messages after user message",
+        "Placeholder content updated progressively as onChunk fires",
+        "On completion placeholder replaced with final message including metadata",
+        "On error both optimistic user message and streaming placeholder removed",
+        "Build passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Show streaming indicator in ChatMessage",
+      "description": "As an investor, I want a visual cue that the AI is actively generating a response.",
+      "acceptanceCriteria": [
+        "ChatMessage renders a blinking cursor (animate-pulse) after content when message.isStreaming is true",
+        "A 'Thinking...' badge shown while message.isStreaming and content is empty",
+        "No visual change to non-streaming messages",
+        "Build passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

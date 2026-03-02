@@ -11,7 +11,9 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { query, run } from '../config/database.js';
-import { processQuestion } from '../services/llmService.js';
+import { processQuestion, generateSQL, formatResultsStream } from '../services/llmService.js';
+import { validateAndSanitize } from '../utils/sqlSanitizer.js';
+import { query as dbQuery } from '../config/database.js';
 import { analyzeRouting } from '../services/routingService.js';
 
 /**
@@ -289,9 +291,209 @@ export async function listSessions(req, res) {
   }
 }
 
+/**
+ * Send a message and stream the AI response via Server-Sent Events
+ * POST /api/chat/sessions/:sessionId/message/stream
+ */
+export async function streamMessage(req, res) {
+  // Set SSE headers immediately so the client can start reading
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const sendEvent = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
+  const sendDone = () => { res.write('data: [DONE]\n\n'); res.end(); };
+
+  try {
+    const { sessionId } = req.params;
+    const { message } = req.body;
+
+    if (!message || typeof message !== 'string' || message.trim() === '') {
+      sendEvent({ type: 'error', message: 'Message is required' });
+      sendDone();
+      return;
+    }
+
+    // Verify session exists
+    const sessions = query(
+      `SELECT * FROM chat_sessions WHERE session_id = ?`,
+      [sessionId]
+    );
+    if (sessions.length === 0) {
+      sendEvent({ type: 'error', message: 'Session not found' });
+      sendDone();
+      return;
+    }
+
+    // Fetch prior session messages as conversation history
+    const historyRows = query(
+      `SELECT role, content FROM chat_messages
+       WHERE session_id = ?
+       ORDER BY id DESC
+       LIMIT 10`,
+      [sessionId]
+    );
+    const conversationHistory = historyRows.reverse();
+
+    // Store user message
+    run(
+      `INSERT INTO chat_messages (session_id, role, content, created_at)
+       VALUES (?, 'user', ?, datetime('now'))`,
+      [sessionId, message]
+    );
+
+    // Step 1: Generate SQL
+    const sqlGeneration = await generateSQL(message, conversationHistory);
+
+    if (!sqlGeneration.success) {
+      const content = sqlGeneration.error === 'Question is out of scope'
+        ? "I apologize, but I can only answer questions related to the financial data, forum discussions, chat history, and escalation tracking in our database. Your question appears to be outside my scope. Is there anything about the company financials or forum activity I can help you with?"
+        : "I encountered an error trying to formulate a database query for your question. This may require human assistance.";
+
+      sendEvent({ type: 'token', content });
+
+      // Store assistant message for out-of-scope / error
+      const isOutOfScope = sqlGeneration.error === 'Question is out of scope';
+      const assistantResult = run(
+        `INSERT INTO chat_messages (
+           session_id, role, content, is_in_scope, needs_escalation, escalation_reason, created_at
+         ) VALUES (?, 'assistant', ?, ?, 1, ?, datetime('now'))`,
+        [sessionId, content, isOutOfScope ? 0 : 1,
+          isOutOfScope ? 'Out-of-scope: Question unrelated to database contents' : 'SQL generation failed']
+      );
+      run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
+
+      sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { isInScope: !isOutOfScope, needsEscalation: true } });
+      sendDone();
+      return;
+    }
+
+    // Step 2: Validate SQL
+    const validation = validateAndSanitize(sqlGeneration.sql);
+    if (!validation.isValid) {
+      const content = "I generated an unsafe query for your question. For security reasons, I cannot execute it. A human team member will review your question.";
+      sendEvent({ type: 'token', content });
+
+      const assistantResult = run(
+        `INSERT INTO chat_messages (
+           session_id, role, content, generated_sql, needs_escalation, escalation_reason, created_at
+         ) VALUES (?, 'assistant', ?, ?, 1, 'SQL validation failed', datetime('now'))`,
+        [sessionId, content, sqlGeneration.sql]
+      );
+      run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
+
+      sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { needsEscalation: true } });
+      sendDone();
+      return;
+    }
+
+    // Step 3: Execute SQL
+    let results;
+    try {
+      results = dbQuery(validation.sanitizedQuery);
+    } catch (execError) {
+      const content = "I encountered an error while querying the database. The query may need refinement. A human team member can help with this.";
+      sendEvent({ type: 'token', content });
+
+      const assistantResult = run(
+        `INSERT INTO chat_messages (
+           session_id, role, content, generated_sql, needs_escalation, escalation_reason, created_at
+         ) VALUES (?, 'assistant', ?, ?, 1, 'SQL execution failed', datetime('now'))`,
+        [sessionId, content, validation.sanitizedQuery]
+      );
+      run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
+
+      sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { needsEscalation: true } });
+      sendDone();
+      return;
+    }
+
+    // Step 4: Stream the formatted response
+    let fullContent = '';
+    await formatResultsStream(message, validation.sanitizedQuery, results, conversationHistory, (chunk) => {
+      fullContent += chunk;
+      sendEvent({ type: 'token', content: chunk });
+    });
+
+    // Step 5: Run routing analysis and store assistant message
+    const routingAnalysis = await analyzeRouting({
+      userQuestion: message,
+      sqlQuery: validation.sanitizedQuery,
+      results,
+      isInScope: true,
+      manualEscalation: false,
+      hadError: false
+    });
+
+    const assistantResult = run(
+      `INSERT INTO chat_messages (
+         session_id, role, content,
+         generated_sql, sql_results,
+         confidence_score, complexity_level, is_in_scope,
+         needs_escalation, escalation_reason,
+         created_at
+       ) VALUES (?, 'assistant', ?, ?, ?, ?, ?, 1, ?, ?, datetime('now'))`,
+      [
+        sessionId,
+        fullContent,
+        validation.sanitizedQuery,
+        JSON.stringify(results),
+        routingAnalysis.confidenceScore,
+        routingAnalysis.complexity.level,
+        routingAnalysis.needsEscalation ? 1 : 0,
+        routingAnalysis.escalationReason || null
+      ]
+    );
+
+    run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
+
+    if (routingAnalysis.needsEscalation) {
+      run(
+        `INSERT INTO escalated_questions (
+           source_type, source_id, session_id, user_name,
+           question_text, escalation_reason, confidence_score,
+           status, created_at
+         ) VALUES ('chat', ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+        [
+          assistantResult.lastID,
+          sessionId,
+          req.investor.name,
+          message,
+          routingAnalysis.escalationReason,
+          routingAnalysis.confidenceScore
+        ]
+      );
+    }
+
+    sendEvent({
+      type: 'done',
+      messageId: assistantResult.lastID,
+      metadata: {
+        generatedSql: validation.sanitizedQuery,
+        resultCount: results.length,
+        confidenceScore: routingAnalysis.confidenceScore,
+        complexityLevel: routingAnalysis.complexity.level,
+        isInScope: true,
+        needsEscalation: routingAnalysis.needsEscalation,
+        escalationReason: routingAnalysis.escalationReason
+      }
+    });
+    sendDone();
+
+  } catch (error) {
+    console.error('Stream message error:', error);
+    try {
+      sendEvent({ type: 'error', message: 'Failed to process message' });
+      sendDone();
+    } catch { /* response may already be closed */ }
+  }
+}
+
 export default {
   createSession,
   getSession,
   sendMessage,
+  streamMessage,
   listSessions
 };
