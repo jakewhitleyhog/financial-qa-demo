@@ -8,7 +8,7 @@
  * - Scope detection (is question related to database?)
  */
 
-import { getClaudeClient, MODEL_CONFIG, CONFIDENCE_MODEL_CONFIG } from '../config/claude.js';
+import { getClaudeClient, MODEL_CONFIG, CONFIDENCE_MODEL_CONFIG, SCOPE_DETECTION_MODEL_CONFIG } from '../config/claude.js';
 import { query as dbQuery, getSchema, getSampleData } from '../config/database.js';
 import { validateAndSanitize } from '../utils/sqlSanitizer.js';
 import {
@@ -195,8 +195,9 @@ export async function generateSQL(userQuestion, conversationHistory = []) {
 
     const sqlQuery = response.content[0].text.trim();
 
-    // Check if Claude returned OUT_OF_SCOPE
-    if (sqlQuery.includes('OUT_OF_SCOPE')) {
+    // Check if Claude returned OUT_OF_SCOPE — use strict equality to avoid
+    // false-positives if a column name or string literal contains the substring
+    if (sqlQuery.trim() === 'OUT_OF_SCOPE') {
       return {
         success: false,
         sql: null,
@@ -391,10 +392,9 @@ export async function detectScope(userQuestion) {
     // Build the scope detection prompt
     const prompt = buildScopeDetectionPrompt(userQuestion);
 
-    // Call Claude API
+    // Call Claude API — SCOPE_DETECTION_MODEL_CONFIG caps max_tokens at 20
     const response = await client.messages.create({
-      ...MODEL_CONFIG,
-      max_tokens: 20,
+      ...SCOPE_DETECTION_MODEL_CONFIG,
       messages: [{
         role: 'user',
         content: prompt
