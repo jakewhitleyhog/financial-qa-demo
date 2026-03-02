@@ -1,0 +1,38 @@
+{
+  "project": "financial-qa-demo",
+  "branchName": "ralph/conversation-history",
+  "description": "Pass session message history to Claude so investors can ask follow-up questions that reference prior answers (Issue #21)",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Update LLM service to accept and use conversation history",
+      "description": "As a developer, I want processQuestion(), generateSQL(), and formatResults() to accept a conversationHistory array so Claude can resolve references to prior questions.",
+      "acceptanceCriteria": [
+        "processQuestion(userQuestion, conversationHistory = []) accepts an optional second parameter",
+        "generateSQL() prepends conversationHistory as prior message pairs before the current prompt in the Claude API messages array",
+        "formatResults() prepends conversationHistory as prior message pairs before the current prompt in the Claude API messages array",
+        "Empty history (default []) produces identical behavior to today",
+        "History entries that would violate Anthropic alternating-role constraint are filtered out",
+        "npm test passes in the backend"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Fetch session history in chat controller and pass to processQuestion",
+      "description": "As an investor, I want my follow-up questions to be understood in context so I don't have to repeat myself.",
+      "acceptanceCriteria": [
+        "Before calling processQuestion() in sendMessage(), the last 10 messages from the current session are fetched from chat_messages ordered oldest-first",
+        "History is passed as conversationHistory to processQuestion()",
+        "The current user message being sent is NOT included in the history array",
+        "No change to any API response shape or database schema",
+        "npm test passes in the backend"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
