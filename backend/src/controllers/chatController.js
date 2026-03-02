@@ -353,16 +353,26 @@ export async function streamMessage(req, res) {
 
       sendEvent({ type: 'token', content });
 
-      // Store assistant message for out-of-scope / error
+      // Store assistant message for out-of-scope / SQL generation error
       const isOutOfScope = sqlGeneration.error === 'Question is out of scope';
+      const escalationReason = isOutOfScope
+        ? 'Out-of-scope: Question unrelated to database contents'
+        : 'SQL generation failed';
       const assistantResult = run(
         `INSERT INTO chat_messages (
            session_id, role, content, is_in_scope, needs_escalation, escalation_reason, created_at
          ) VALUES (?, 'assistant', ?, ?, 1, ?, datetime('now'))`,
-        [sessionId, content, isOutOfScope ? 0 : 1,
-          isOutOfScope ? 'Out-of-scope: Question unrelated to database contents' : 'SQL generation failed']
+        [sessionId, content, isOutOfScope ? 0 : 1, escalationReason]
       );
       run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
+      run(
+        `INSERT INTO escalated_questions (
+           source_type, source_id, session_id, user_name,
+           question_text, escalation_reason, confidence_score,
+           status, created_at
+         ) VALUES ('chat', ?, ?, ?, ?, ?, 0.0, 'pending', datetime('now'))`,
+        [assistantResult.lastID, sessionId, req.investor.name, message, escalationReason]
+      );
 
       sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { isInScope: !isOutOfScope, needsEscalation: true } });
       sendDone();
@@ -382,6 +392,14 @@ export async function streamMessage(req, res) {
         [sessionId, content, sqlGeneration.sql]
       );
       run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
+      run(
+        `INSERT INTO escalated_questions (
+           source_type, source_id, session_id, user_name,
+           question_text, escalation_reason, confidence_score,
+           status, created_at
+         ) VALUES ('chat', ?, ?, ?, ?, 'SQL validation failed', 0.0, 'pending', datetime('now'))`,
+        [assistantResult.lastID, sessionId, req.investor.name, message]
+      );
 
       sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { needsEscalation: true } });
       sendDone();
@@ -403,6 +421,14 @@ export async function streamMessage(req, res) {
         [sessionId, content, validation.sanitizedQuery]
       );
       run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
+      run(
+        `INSERT INTO escalated_questions (
+           source_type, source_id, session_id, user_name,
+           question_text, escalation_reason, confidence_score,
+           status, created_at
+         ) VALUES ('chat', ?, ?, ?, ?, 'SQL execution failed', 0.0, 'pending', datetime('now'))`,
+        [assistantResult.lastID, sessionId, req.investor.name, message]
+      );
 
       sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { needsEscalation: true } });
       sendDone();

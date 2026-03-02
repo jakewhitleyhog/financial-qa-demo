@@ -325,9 +325,8 @@ export async function formatResultsStream(userQuestion, sqlQuery, results, conve
       onChunk(event.delta.text);
     }
   }
-
-  // Await completion so any streaming errors surface before the caller continues
-  await stream.finalMessage();
+  // for-await drains all events including the final message_stop —
+  // no need to call stream.finalMessage() separately
 }
 
 /**
