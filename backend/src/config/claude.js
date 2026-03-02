@@ -32,7 +32,7 @@ export function getClaudeClient() {
  * Default model configuration
  */
 export const MODEL_CONFIG = {
-  model: 'claude-3-5-sonnet-20241022',
+  model: 'claude-sonnet-4-6',
   max_tokens: 2048,
   temperature: 0.0 // Use 0 for deterministic SQL generation
 };
@@ -41,7 +41,7 @@ export const MODEL_CONFIG = {
  * Model for confidence scoring (can use faster model)
  */
 export const CONFIDENCE_MODEL_CONFIG = {
-  model: 'claude-3-5-sonnet-20241022',
+  model: 'claude-sonnet-4-6',
   max_tokens: 50,
   temperature: 0.0
 };
