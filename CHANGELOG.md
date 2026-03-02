@@ -394,3 +394,25 @@ Three low/medium risk issues identified during code reviews were addressed in a 
 
 ### Potential Follow-Up Issues
 - Consider whether to delete the orphaned user message on disconnect, or to mark it with a status flag (e.g., `status = 'abandoned'`) so it can be surfaced differently in the UI.
+
+## [2026-03-02] — Fix Unanswered tab SQL alias error
+
+**Branch:** fix/unanswered-tab
+**PR:** #36
+
+### What Was Changed
+- `backend/src/controllers/forumController.js`: Added `fq` alias to the count query in `listQuestions()`. The `whereClause` for `sortBy=unanswered` references `fq.is_answered` but the count query had no `fq` alias, causing a SQLite error on every request to the Unanswered tab.
+
+### Why It Was Changed
+Every load of the Unanswered tab returned "Failed to List Questions" due to the unresolved `fq` table alias in the count query.
+
+### Files Modified
+| File | Change Type | Description |
+|------|-------------|-------------|
+| `backend/src/controllers/forumController.js` | Modified | Added `fq` alias to count query (`FROM forum_questions fq`) |
+
+### Known Risks & Side Effects
+- None identified.
+
+### Potential Follow-Up Issues
+- None identified.
