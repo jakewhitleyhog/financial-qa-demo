@@ -138,7 +138,7 @@ export async function sendMessage(req, res) {
     const historyRows = query(
       `SELECT role, content FROM chat_messages
        WHERE session_id = ?
-       ORDER BY created_at DESC
+       ORDER BY id DESC
        LIMIT 10`,
       [sessionId]
     );
