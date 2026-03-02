@@ -1,0 +1,22 @@
+{
+  "project": "financial-qa-demo",
+  "branchName": "ralph/claude-model-upgrade",
+  "description": "Upgrade Claude model from claude-3-5-sonnet-20241022 to claude-sonnet-4-6 for better SQL accuracy and reasoning (Issue #20)",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Update model config to claude-sonnet-4-6",
+      "description": "As a developer, I want the backend to use the latest Claude model so investors get higher-quality AI answers.",
+      "acceptanceCriteria": [
+        "MODEL_CONFIG.model in backend/src/config/claude.js is set to 'claude-sonnet-4-6'",
+        "CONFIDENCE_MODEL_CONFIG.model in backend/src/config/claude.js is set to 'claude-sonnet-4-6'",
+        "No other files reference 'claude-3-5-sonnet-20241022'",
+        "npm test passes in the backend",
+        "Frontend build passes (npm run build in frontend/)"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

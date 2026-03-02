@@ -321,9 +321,8 @@ export async function detectScope(userQuestion) {
 
     // Call Claude API
     const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      ...MODEL_CONFIG,
       max_tokens: 20,
-      temperature: 0.0,
       messages: [{
         role: 'user',
         content: prompt
