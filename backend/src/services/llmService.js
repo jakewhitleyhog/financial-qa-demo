@@ -65,24 +65,24 @@ export async function processQuestion(userQuestion, conversationHistory = []) {
       };
     }
 
-    // Step 1: Check if question is in scope
-    const scopeCheck = await detectScope(userQuestion);
-    if (!scopeCheck.isInScope) {
-      return {
-        success: false,
-        content: "I apologize, but I can only answer questions related to the financial data, forum discussions, chat history, and escalation tracking in our database. Your question appears to be outside my scope. Is there anything about the company financials or forum activity I can help you with?",
-        metadata: {
-          isInScope: false,
-          needsEscalation: true,
-          escalationReason: 'Out-of-scope: Question unrelated to database contents'
-        }
-      };
-    }
-
-    // Step 2: Generate SQL query
+    // Step 1: Generate SQL query (also serves as scope detection — Claude returns
+    // OUT_OF_SCOPE when the question is unrelated to the database, making a
+    // separate detectScope() call redundant)
     const sqlGeneration = await generateSQL(userQuestion, conversationHistory);
 
     if (!sqlGeneration.success) {
+      // Distinguish out-of-scope from a genuine SQL generation error
+      if (sqlGeneration.error === 'Question is out of scope') {
+        return {
+          success: false,
+          content: "I apologize, but I can only answer questions related to the financial data, forum discussions, chat history, and escalation tracking in our database. Your question appears to be outside my scope. Is there anything about the company financials or forum activity I can help you with?",
+          metadata: {
+            isInScope: false,
+            needsEscalation: true,
+            escalationReason: 'Out-of-scope: Question unrelated to database contents'
+          }
+        };
+      }
       return {
         success: false,
         content: "I encountered an error trying to formulate a database query for your question. This may require human assistance.",

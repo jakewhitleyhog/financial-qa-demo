@@ -1,0 +1,23 @@
+{
+  "project": "financial-qa-demo",
+  "branchName": "ralph/collapse-scope-detection",
+  "description": "Remove redundant detectScope() call from processQuestion() — generateSQL() already returns OUT_OF_SCOPE, eliminating one API round-trip per message (Issue #22)",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Remove detectScope call from processQuestion, derive isInScope from SQL generation",
+      "description": "As a developer, I want processQuestion() to skip the separate scope detection step so each message requires one fewer API call.",
+      "acceptanceCriteria": [
+        "detectScope() is no longer called inside processQuestion()",
+        "isInScope is true when generateSQL() succeeds; false when generateSQL() returns error 'Question is out of scope'",
+        "Out-of-scope response message to the user is identical to before",
+        "needsEscalation and escalationReason for out-of-scope questions are unchanged",
+        "detectScope() function itself is NOT deleted — remains exported",
+        "npm test passes in the backend"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
