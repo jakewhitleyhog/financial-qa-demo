@@ -17,6 +17,66 @@ import { query as dbQuery } from '../config/database.js';
 import { analyzeRouting } from '../services/routingService.js';
 
 /**
+ * Shared SQL pipeline: text-to-SQL → validation → execution.
+ * Used by both sendMessage() and streamMessage() so pipeline changes
+ * only need to be made in one place.
+ *
+ * @param {string} message
+ * @param {Array<{role: string, content: string}>} conversationHistory
+ * @returns {Promise<
+ *   { success: true,  sql: string, results: Array } |
+ *   { success: false, errorType: string, sql: string|null,
+ *     content: string, escalationReason: string, isInScope: boolean }
+ * >}
+ */
+async function runSqlPipeline(message, conversationHistory) {
+  const sqlGeneration = await generateSQL(message, conversationHistory);
+  if (!sqlGeneration.success) {
+    const isOutOfScope = sqlGeneration.error === 'Question is out of scope';
+    return {
+      success: false,
+      errorType: isOutOfScope ? 'out_of_scope' : 'sql_gen_failed',
+      sql: null,
+      content: isOutOfScope
+        ? "I apologize, but I can only answer questions related to the financial data, forum discussions, chat history, and escalation tracking in our database. Your question appears to be outside my scope. Is there anything about the company financials or forum activity I can help you with?"
+        : "I encountered an error trying to formulate a database query for your question. This may require human assistance.",
+      escalationReason: isOutOfScope
+        ? 'Out-of-scope: Question unrelated to database contents'
+        : 'SQL generation failed',
+      isInScope: !isOutOfScope,
+    };
+  }
+
+  const validation = validateAndSanitize(sqlGeneration.sql);
+  if (!validation.isValid) {
+    return {
+      success: false,
+      errorType: 'sql_validation_failed',
+      sql: sqlGeneration.sql,
+      content: "I generated an unsafe query for your question. For security reasons, I cannot execute it. A human team member will review your question.",
+      escalationReason: 'SQL validation failed',
+      isInScope: true,
+    };
+  }
+
+  let results;
+  try {
+    results = dbQuery(validation.sanitizedQuery);
+  } catch (execError) {
+    return {
+      success: false,
+      errorType: 'sql_exec_failed',
+      sql: validation.sanitizedQuery,
+      content: "I encountered an error while querying the database. The query may need refinement. A human team member can help with this.",
+      escalationReason: 'SQL execution failed',
+      isInScope: true,
+    };
+  }
+
+  return { success: true, sql: validation.sanitizedQuery, results };
+}
+
+/**
  * Create a new chat session
  * POST /api/chat/sessions
  */
@@ -305,6 +365,11 @@ export async function streamMessage(req, res) {
   const sendEvent = (data) => res.write(`data: ${JSON.stringify(data)}\n\n`);
   const sendDone = () => { res.write('data: [DONE]\n\n'); res.end(); };
 
+  // Track client disconnect — if the client navigates away mid-stream,
+  // skip the post-stream DB writes to avoid orphaned assistant messages
+  let clientDisconnected = false;
+  res.on('close', () => { clientDisconnected = true; });
+
   try {
     const { sessionId } = req.params;
     const { message } = req.body;
@@ -343,26 +408,18 @@ export async function streamMessage(req, res) {
       [sessionId, message]
     );
 
-    // Step 1: Generate SQL
-    const sqlGeneration = await generateSQL(message, conversationHistory);
+    // Run shared SQL pipeline (generate → validate → execute)
+    const pipeline = await runSqlPipeline(message, conversationHistory);
 
-    if (!sqlGeneration.success) {
-      const content = sqlGeneration.error === 'Question is out of scope'
-        ? "I apologize, but I can only answer questions related to the financial data, forum discussions, chat history, and escalation tracking in our database. Your question appears to be outside my scope. Is there anything about the company financials or forum activity I can help you with?"
-        : "I encountered an error trying to formulate a database query for your question. This may require human assistance.";
+    if (!pipeline.success) {
+      sendEvent({ type: 'token', content: pipeline.content });
 
-      sendEvent({ type: 'token', content });
-
-      // Store assistant message for out-of-scope / SQL generation error
-      const isOutOfScope = sqlGeneration.error === 'Question is out of scope';
-      const escalationReason = isOutOfScope
-        ? 'Out-of-scope: Question unrelated to database contents'
-        : 'SQL generation failed';
       const assistantResult = run(
         `INSERT INTO chat_messages (
-           session_id, role, content, is_in_scope, needs_escalation, escalation_reason, created_at
-         ) VALUES (?, 'assistant', ?, ?, 1, ?, datetime('now'))`,
-        [sessionId, content, isOutOfScope ? 0 : 1, escalationReason]
+           session_id, role, content, generated_sql,
+           is_in_scope, needs_escalation, escalation_reason, created_at
+         ) VALUES (?, 'assistant', ?, ?, ?, 1, ?, datetime('now'))`,
+        [sessionId, pipeline.content, pipeline.sql, pipeline.isInScope ? 1 : 0, pipeline.escalationReason]
       );
       run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
       run(
@@ -371,82 +428,31 @@ export async function streamMessage(req, res) {
            question_text, escalation_reason, confidence_score,
            status, created_at
          ) VALUES ('chat', ?, ?, ?, ?, ?, 0.0, 'pending', datetime('now'))`,
-        [assistantResult.lastID, sessionId, req.investor.name, message, escalationReason]
+        [assistantResult.lastID, sessionId, req.investor.name, message, pipeline.escalationReason]
       );
 
-      sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { isInScope: !isOutOfScope, needsEscalation: true } });
+      sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { isInScope: pipeline.isInScope, needsEscalation: true } });
       sendDone();
       return;
     }
 
-    // Step 2: Validate SQL
-    const validation = validateAndSanitize(sqlGeneration.sql);
-    if (!validation.isValid) {
-      const content = "I generated an unsafe query for your question. For security reasons, I cannot execute it. A human team member will review your question.";
-      sendEvent({ type: 'token', content });
-
-      const assistantResult = run(
-        `INSERT INTO chat_messages (
-           session_id, role, content, generated_sql, needs_escalation, escalation_reason, created_at
-         ) VALUES (?, 'assistant', ?, ?, 1, 'SQL validation failed', datetime('now'))`,
-        [sessionId, content, sqlGeneration.sql]
-      );
-      run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
-      run(
-        `INSERT INTO escalated_questions (
-           source_type, source_id, session_id, user_name,
-           question_text, escalation_reason, confidence_score,
-           status, created_at
-         ) VALUES ('chat', ?, ?, ?, ?, 'SQL validation failed', 0.0, 'pending', datetime('now'))`,
-        [assistantResult.lastID, sessionId, req.investor.name, message]
-      );
-
-      sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { needsEscalation: true } });
-      sendDone();
-      return;
-    }
-
-    // Step 3: Execute SQL
-    let results;
-    try {
-      results = dbQuery(validation.sanitizedQuery);
-    } catch (execError) {
-      const content = "I encountered an error while querying the database. The query may need refinement. A human team member can help with this.";
-      sendEvent({ type: 'token', content });
-
-      const assistantResult = run(
-        `INSERT INTO chat_messages (
-           session_id, role, content, generated_sql, needs_escalation, escalation_reason, created_at
-         ) VALUES (?, 'assistant', ?, ?, 1, 'SQL execution failed', datetime('now'))`,
-        [sessionId, content, validation.sanitizedQuery]
-      );
-      run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
-      run(
-        `INSERT INTO escalated_questions (
-           source_type, source_id, session_id, user_name,
-           question_text, escalation_reason, confidence_score,
-           status, created_at
-         ) VALUES ('chat', ?, ?, ?, ?, 'SQL execution failed', 0.0, 'pending', datetime('now'))`,
-        [assistantResult.lastID, sessionId, req.investor.name, message]
-      );
-
-      sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { needsEscalation: true } });
-      sendDone();
-      return;
-    }
-
-    // Step 4: Stream the formatted response
+    // Stream the formatted response token by token
     let fullContent = '';
-    await formatResultsStream(message, validation.sanitizedQuery, results, conversationHistory, (chunk) => {
+    await formatResultsStream(message, pipeline.sql, pipeline.results, conversationHistory, (chunk) => {
       fullContent += chunk;
       sendEvent({ type: 'token', content: chunk });
     });
 
-    // Step 5: Run routing analysis and store assistant message
+    // Skip DB writes if client disconnected before streaming finished
+    if (clientDisconnected) {
+      return;
+    }
+
+    // Run routing analysis and store assistant message
     const routingAnalysis = await analyzeRouting({
       userQuestion: message,
-      sqlQuery: validation.sanitizedQuery,
-      results,
+      sqlQuery: pipeline.sql,
+      results: pipeline.results,
       isInScope: true,
       manualEscalation: false,
       hadError: false
@@ -463,8 +469,8 @@ export async function streamMessage(req, res) {
       [
         sessionId,
         fullContent,
-        validation.sanitizedQuery,
-        JSON.stringify(results),
+        pipeline.sql,
+        JSON.stringify(pipeline.results),
         routingAnalysis.confidenceScore,
         routingAnalysis.complexity.level,
         routingAnalysis.needsEscalation ? 1 : 0,
@@ -496,8 +502,8 @@ export async function streamMessage(req, res) {
       type: 'done',
       messageId: assistantResult.lastID,
       metadata: {
-        generatedSql: validation.sanitizedQuery,
-        resultCount: results.length,
+        generatedSql: pipeline.sql,
+        resultCount: pipeline.results.length,
         confidenceScore: routingAnalysis.confidenceScore,
         complexityLevel: routingAnalysis.complexity.level,
         isInScope: true,
