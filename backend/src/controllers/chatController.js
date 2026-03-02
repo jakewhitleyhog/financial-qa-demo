@@ -133,6 +133,17 @@ export async function sendMessage(req, res) {
       });
     }
 
+    // Fetch the last 10 messages from this session as conversation history
+    // (fetched before storing the current user message so it is not included)
+    const historyRows = query(
+      `SELECT role, content FROM chat_messages
+       WHERE session_id = ?
+       ORDER BY created_at DESC
+       LIMIT 10`,
+      [sessionId]
+    );
+    const conversationHistory = historyRows.reverse(); // oldest-first for Claude
+
     // Store user message
     const userMessageResult = run(
       `INSERT INTO chat_messages (session_id, role, content, created_at)
@@ -140,8 +151,8 @@ export async function sendMessage(req, res) {
       [sessionId, message]
     );
 
-    // Process the question through LLM service
-    const llmResponse = await processQuestion(message);
+    // Process the question through LLM service with conversation context
+    const llmResponse = await processQuestion(message, conversationHistory);
 
     // Analyze routing for the response
     let routingAnalysis;

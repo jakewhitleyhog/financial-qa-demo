@@ -19,13 +19,38 @@ import {
 } from '../utils/promptTemplates.js';
 
 /**
+ * Build a valid history messages array for the Claude API.
+ * Ensures messages alternate user/assistant starting with user and ending with assistant,
+ * so the caller can safely append the current user message after.
+ *
+ * @param {Array<{role: string, content: string}>} conversationHistory
+ * @returns {Array<{role: string, content: string}>}
+ */
+function buildHistoryMessages(conversationHistory) {
+  const filtered = [];
+  let expectedRole = 'user';
+  for (const msg of conversationHistory) {
+    if (msg.role === expectedRole) {
+      filtered.push({ role: msg.role, content: msg.content });
+      expectedRole = expectedRole === 'user' ? 'assistant' : 'user';
+    }
+  }
+  // Ensure history ends with assistant so the new user message follows correctly
+  while (filtered.length > 0 && filtered[filtered.length - 1].role !== 'assistant') {
+    filtered.pop();
+  }
+  return filtered;
+}
+
+/**
  * Main text-to-SQL pipeline
  * Takes a user question and returns a natural language answer
  *
  * @param {string} userQuestion - The user's question
+ * @param {Array<{role: string, content: string}>} [conversationHistory=[]] - Prior session messages
  * @returns {Promise<Object>} - Result object with answer, metadata, and any errors
  */
-export async function processQuestion(userQuestion) {
+export async function processQuestion(userQuestion, conversationHistory = []) {
   try {
     // Check if API key is configured
     const client = getClaudeClient();
@@ -55,7 +80,7 @@ export async function processQuestion(userQuestion) {
     }
 
     // Step 2: Generate SQL query
-    const sqlGeneration = await generateSQL(userQuestion);
+    const sqlGeneration = await generateSQL(userQuestion, conversationHistory);
 
     if (!sqlGeneration.success) {
       return {
@@ -104,7 +129,7 @@ export async function processQuestion(userQuestion) {
     }
 
     // Step 5: Format results into natural language
-    const nlResponse = await formatResults(userQuestion, validation.sanitizedQuery, results);
+    const nlResponse = await formatResults(userQuestion, validation.sanitizedQuery, results, conversationHistory);
 
     // Step 6: Return successful response with metadata
     return {
@@ -137,9 +162,10 @@ export async function processQuestion(userQuestion) {
  * Generate SQL query from natural language question
  *
  * @param {string} userQuestion - The user's question
+ * @param {Array<{role: string, content: string}>} [conversationHistory=[]] - Prior session messages
  * @returns {Promise<Object>} - { success: boolean, sql: string|null, error: string|null }
  */
-export async function generateSQL(userQuestion) {
+export async function generateSQL(userQuestion, conversationHistory = []) {
   try {
     const client = getClaudeClient();
 
@@ -158,13 +184,13 @@ export async function generateSQL(userQuestion) {
     // Build the prompt
     const prompt = buildTextToSQLPrompt(userQuestion, schema, sampleData);
 
-    // Call Claude API
+    // Call Claude API, prepending prior conversation turns for follow-up context
     const response = await client.messages.create({
       ...MODEL_CONFIG,
-      messages: [{
-        role: 'user',
-        content: prompt
-      }]
+      messages: [
+        ...buildHistoryMessages(conversationHistory),
+        { role: 'user', content: prompt }
+      ]
     });
 
     const sqlQuery = response.content[0].text.trim();
@@ -200,9 +226,10 @@ export async function generateSQL(userQuestion) {
  * @param {string} userQuestion - The original user question
  * @param {string} sqlQuery - The SQL query that was executed
  * @param {Array} results - The query results
+ * @param {Array<{role: string, content: string}>} [conversationHistory=[]] - Prior session messages
  * @returns {Promise<Object>} - { success: boolean, content: string }
  */
-export async function formatResults(userQuestion, sqlQuery, results) {
+export async function formatResults(userQuestion, sqlQuery, results, conversationHistory = []) {
   try {
     const client = getClaudeClient();
 
@@ -223,13 +250,13 @@ export async function formatResults(userQuestion, sqlQuery, results) {
     // Build the prompt
     const prompt = buildResultsToNLPrompt(userQuestion, sqlQuery, results);
 
-    // Call Claude API
+    // Call Claude API, prepending prior conversation turns for follow-up context
     const response = await client.messages.create({
       ...MODEL_CONFIG,
-      messages: [{
-        role: 'user',
-        content: prompt
-      }]
+      messages: [
+        ...buildHistoryMessages(conversationHistory),
+        { role: 'user', content: prompt }
+      ]
     });
 
     const naturalLanguageResponse = response.content[0].text.trim();
