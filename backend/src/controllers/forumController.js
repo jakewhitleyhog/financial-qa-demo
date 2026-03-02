@@ -95,7 +95,7 @@ export async function listQuestions(req, res) {
     );
 
     const countResult = query(
-      `SELECT COUNT(*) as total FROM forum_questions ${whereClause}`
+      `SELECT COUNT(*) as total FROM forum_questions fq ${whereClause}`
     );
 
     // Check which questions the current investor has upvoted
