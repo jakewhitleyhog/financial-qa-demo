@@ -380,10 +380,10 @@ export async function streamMessage(req, res) {
       return;
     }
 
-    // Verify session exists
+    // Verify session exists and belongs to this investor
     const sessions = query(
-      `SELECT * FROM chat_sessions WHERE session_id = ?`,
-      [sessionId]
+      `SELECT * FROM chat_sessions WHERE session_id = ? AND investor_id = ?`,
+      [sessionId, req.investor.id]
     );
     if (sessions.length === 0) {
       sendEvent({ type: 'error', message: 'Session not found' });
