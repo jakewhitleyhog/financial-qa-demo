@@ -8,6 +8,7 @@ import {
   createSession,
   getSession,
   sendMessage,
+  streamMessage,
   listSessions
 } from '../controllers/chatController.js';
 
@@ -20,5 +21,6 @@ router.get('/sessions/:sessionId', getSession);
 
 // Messaging
 router.post('/sessions/:sessionId/message', sendMessage);
+router.post('/sessions/:sessionId/message/stream', streamMessage);
 
 export default router;

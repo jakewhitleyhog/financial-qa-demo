@@ -36,11 +36,19 @@ export function ChatMessage({ message }) {
               Sending...
             </Badge>
           )}
+          {message.isStreaming && !message.content && (
+            <Badge variant="outline" className="text-xs">
+              Thinking...
+            </Badge>
+          )}
         </div>
 
         {/* Message content */}
         <div className="text-sm leading-relaxed whitespace-pre-wrap">
           {message.content}
+          {message.isStreaming && (
+            <span className="inline-block w-[2px] h-[1em] bg-current align-middle ml-0.5 animate-pulse" />
+          )}
         </div>
 
         {/* Assistant message metadata */}

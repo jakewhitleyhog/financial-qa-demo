@@ -54,7 +54,7 @@ export function useChatSession(initialSessionId = null) {
   }, []);
 
   /**
-   * Send a message
+   * Send a message and stream the assistant response token by token.
    */
   const sendMessage = useCallback(async (messageText) => {
     if (!sessionInfo) {
@@ -73,24 +73,53 @@ export function useChatSession(initialSessionId = null) {
     };
     setMessages(prev => [...prev, userMessage]);
 
-    try {
-      const response = await chatAPI.sendMessage(sessionInfo.sessionId, messageText);
+    // Add a streaming placeholder for the assistant response
+    const streamingId = `streaming-${Date.now()}`;
+    setMessages(prev => [...prev, {
+      id: streamingId,
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+      createdAt: new Date().toISOString(),
+    }]);
 
-      // Replace optimistic message with real one and add assistant response
+    let accumulatedContent = '';
+    let finalData = null;
+
+    try {
+      await chatAPI.sendMessageStream(
+        sessionInfo.sessionId,
+        messageText,
+        (chunk) => {
+          accumulatedContent += chunk;
+          setMessages(prev => prev.map(m =>
+            m.id === streamingId ? { ...m, content: accumulatedContent } : m
+          ));
+        },
+        (data) => { finalData = data; }
+      );
+
+      // Replace optimistic + streaming placeholders with settled messages
       setMessages(prev => {
-        const withoutOptimistic = prev.filter(m => !m.isOptimistic);
+        const cleaned = prev.filter(m => !m.isOptimistic && m.id !== streamingId);
         return [
-          ...withoutOptimistic,
+          ...cleaned,
           { ...userMessage, isOptimistic: false },
-          response.message,
+          {
+            id: finalData?.messageId,
+            role: 'assistant',
+            content: accumulatedContent,
+            metadata: finalData?.metadata,
+            createdAt: new Date().toISOString(),
+            isStreaming: false,
+          },
         ];
       });
 
-      return response.message;
+      return finalData;
     } catch (err) {
       setError(err.message);
-      // Remove optimistic message on error
-      setMessages(prev => prev.filter(m => !m.isOptimistic));
+      setMessages(prev => prev.filter(m => !m.isOptimistic && m.id !== streamingId));
       console.error('Failed to send message:', err);
       throw err;
     } finally {

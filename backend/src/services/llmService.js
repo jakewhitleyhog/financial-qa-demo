@@ -285,6 +285,51 @@ export async function formatResults(userQuestion, sqlQuery, results, conversatio
 }
 
 /**
+ * Stream SQL results formatted as natural language, emitting tokens via callback.
+ *
+ * @param {string} userQuestion
+ * @param {string} sqlQuery
+ * @param {Array} results
+ * @param {Array<{role: string, content: string}>} [conversationHistory=[]]
+ * @param {function(string): void} onChunk - called with each text token as it arrives
+ * @returns {Promise<void>}
+ */
+export async function formatResultsStream(userQuestion, sqlQuery, results, conversationHistory = [], onChunk) {
+  const client = getClaudeClient();
+
+  if (!client) {
+    // No API key — emit a single fallback token
+    const fallback = results.length === 0
+      ? "No results found."
+      : `Found ${results.length} result(s): ${JSON.stringify(results, null, 2)}`;
+    onChunk(fallback);
+    return;
+  }
+
+  const prompt = buildResultsToNLPrompt(userQuestion, sqlQuery, results);
+
+  const stream = client.messages.stream({
+    ...MODEL_CONFIG,
+    messages: [
+      ...buildHistoryMessages(conversationHistory),
+      { role: 'user', content: prompt }
+    ]
+  });
+
+  for await (const event of stream) {
+    if (
+      event.type === 'content_block_delta' &&
+      event.delta?.type === 'text_delta' &&
+      event.delta.text
+    ) {
+      onChunk(event.delta.text);
+    }
+  }
+  // for-await drains all events including the final message_stop —
+  // no need to call stream.finalMessage() separately
+}
+
+/**
  * Assess confidence in the generated SQL and results
  *
  * @param {string} userQuestion - The user's question
@@ -373,6 +418,7 @@ export default {
   processQuestion,
   generateSQL,
   formatResults,
+  formatResultsStream,
   assessConfidence,
   detectScope
 };
