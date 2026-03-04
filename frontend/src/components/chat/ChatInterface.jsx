@@ -11,6 +11,7 @@ import { ChatInput } from './ChatInput';
 import { Alert, AlertDescription } from '../ui/Alert';
 import { Button } from '../ui/Button';
 import { useChatSession } from '@/hooks/useChatSession';
+import { QUICK_START_QUESTIONS } from '@/config/project';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export function ChatInterface({ sessionId = null }) {
@@ -79,9 +80,7 @@ export function ChatInterface({ sessionId = null }) {
               <div className="text-sm space-y-2">
                 <p className="font-medium">Example questions:</p>
                 <ul className="text-left space-y-1">
-                  <li>• What are the Tier 1 well economics?</li>
-                  <li>• Show me projected production by year</li>
-                  <li>• What is the target IRR and MOIC?</li>
+                  {QUICK_START_QUESTIONS.map(q => <li key={q}>• {q}</li>)}
                 </ul>
               </div>
             </div>
@@ -114,33 +113,20 @@ export function ChatInterface({ sessionId = null }) {
           }
         />
 
-        {/* Example queries (shown when no messages) */}
+        {/* Quick-start buttons (shown when no messages) */}
         {messages.length === 0 && (
           <div className="mt-4 flex gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSendMessage("What are the Tier 1 well economics?")}
-              disabled={!sessionInfo || sending}
-            >
-              Well Economics
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSendMessage("Show me projected production by year")}
-              disabled={!sessionInfo || sending}
-            >
-              Production
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSendMessage("What is the target IRR and MOIC?")}
-              disabled={!sessionInfo || sending}
-            >
-              Returns
-            </Button>
+            {QUICK_START_QUESTIONS.map(q => (
+              <Button
+                key={q}
+                variant="outline"
+                size="sm"
+                onClick={() => handleSendMessage(q)}
+                disabled={!sessionInfo || sending}
+              >
+                {q.split(' ').slice(0, 3).join(' ')}…
+              </Button>
+            ))}
           </div>
         )}
       </CardContent>

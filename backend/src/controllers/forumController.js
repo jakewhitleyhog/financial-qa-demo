@@ -6,6 +6,12 @@
 
 import { query, run, transaction, getDatabase } from '../config/database.js';
 
+const LIMITS = {
+  QUESTION_TITLE: 300,
+  QUESTION_BODY: 5000,
+  REPLY_BODY: 5000,
+};
+
 /**
  * Create a new forum question
  * POST /api/forum/questions
@@ -21,11 +27,11 @@ export async function createQuestion(req, res) {
       });
     }
 
-    if (title.length > 300) {
-      return res.status(400).json({ success: false, error: 'Title must be 300 characters or fewer' });
+    if (title.length > LIMITS.QUESTION_TITLE) {
+      return res.status(400).json({ success: false, error: `Title must be ${LIMITS.QUESTION_TITLE} characters or fewer` });
     }
-    if (body.length > 5000) {
-      return res.status(400).json({ success: false, error: 'Body must be 5,000 characters or fewer' });
+    if (body.length > LIMITS.QUESTION_BODY) {
+      return res.status(400).json({ success: false, error: `Body must be ${LIMITS.QUESTION_BODY.toLocaleString()} characters or fewer` });
     }
 
     const result = run(
@@ -237,8 +243,8 @@ export async function addReply(req, res) {
       });
     }
 
-    if (body.length > 5000) {
-      return res.status(400).json({ success: false, error: 'Reply must be 5,000 characters or fewer' });
+    if (body.length > LIMITS.REPLY_BODY) {
+      return res.status(400).json({ success: false, error: `Reply must be ${LIMITS.REPLY_BODY.toLocaleString()} characters or fewer` });
     }
 
     const questions = query(

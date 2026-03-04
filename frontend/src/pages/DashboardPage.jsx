@@ -49,8 +49,9 @@ function ChartTooltip({ active, payload, label, valuePrefix = '', valueSuffix = 
 
 // ── Pie chart label rendered inside the arc ───────────────────────────────────
 const RADIAN = Math.PI / 180;
+const PIE_SLICE_LABEL_MIN_PERCENT = 0.08; // skip slices too small for readable text
 function PieSliceLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
-  if (percent < 0.08) return null; // skip slices too small for readable text
+  if (percent < PIE_SLICE_LABEL_MIN_PERCENT) return null;
   const r = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + r * Math.cos(-midAngle * RADIAN);
   const y = cy + r * Math.sin(-midAngle * RADIAN);

@@ -78,13 +78,15 @@ async function fetchFromEIA() {
     const db = getDatabase();
     for (const row of rows) {
       if (!row.period || row.value == null) continue;
+      const price = parseFloat(row.value);
+      if (isNaN(price)) continue;
       db.run(
         `INSERT INTO oil_price_cache (period, price_usd, fetched_at)
          VALUES (?, ?, datetime('now'))
          ON CONFLICT(period) DO UPDATE SET
            price_usd  = excluded.price_usd,
            fetched_at = excluded.fetched_at`,
-        [row.period, parseFloat(row.value)]
+        [row.period, price]
       );
     }
     saveDatabase(); // single flush for all 35 upserts
