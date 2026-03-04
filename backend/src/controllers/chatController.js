@@ -182,6 +182,10 @@ export async function sendMessage(req, res) {
       });
     }
 
+    if (message.length > 1000) {
+      return res.status(400).json({ success: false, error: 'Message must be 1,000 characters or fewer' });
+    }
+
     // Verify session exists and belongs to this investor
     const sessions = query(
       `SELECT * FROM chat_sessions WHERE session_id = ? AND investor_id = ?`,
@@ -378,6 +382,12 @@ export async function streamMessage(req, res) {
 
     if (!message || typeof message !== 'string' || message.trim() === '') {
       sendEvent({ type: 'error', message: 'Message is required' });
+      sendDone();
+      return;
+    }
+
+    if (message.length > 1000) {
+      sendEvent({ type: 'error', message: 'Message must be 1,000 characters or fewer' });
       sendDone();
       return;
     }

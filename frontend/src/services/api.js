@@ -90,8 +90,9 @@ export const chatAPI = {
    * @param {string} message
    * @param {function(string): void} onChunk - called with each text token
    * @param {function(object): void} [onDone] - called with done event data
+   * @param {AbortSignal} [signal] - optional signal to cancel the in-flight request
    */
-  sendMessageStream: async (sessionId, message, onChunk, onDone) => {
+  sendMessageStream: async (sessionId, message, onChunk, onDone, signal) => {
     const url = `${API_BASE_URL}/chat/sessions/${sessionId}/message/stream`;
 
     const response = await fetch(url, {
@@ -99,6 +100,7 @@ export const chatAPI = {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
+      signal,
     });
 
     if (response.status === 401) {

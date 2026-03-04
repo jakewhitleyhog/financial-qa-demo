@@ -9,6 +9,7 @@
 
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
@@ -37,6 +38,11 @@ const PORT = process.env.PORT || 3000;
 // MIDDLEWARE
 // ============================================
 
+// Security headers
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'same-site' },
+}));
+
 // CORS configuration
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
@@ -62,6 +68,15 @@ const chatLimiter = rateLimit({
   legacyHeaders: false
 });
 
+// Strict rate limiting for auth endpoints (brute-force protection)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: { success: false, error: 'Too many auth attempts. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Request logging (development only)
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
@@ -83,7 +98,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Auth routes (unauthenticated)
+// Auth routes — rate-limited to prevent brute force
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/verify', authLimiter);
 app.use('/api/auth', authRoutes);
 
 // Protected API routes

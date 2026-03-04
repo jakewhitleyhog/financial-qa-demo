@@ -15,6 +15,8 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // Module-level sentinel — avoids rechecking SQLite timestamps on every request
 let lastFetchedAt = null;
+// Deduplicates concurrent refresh calls so only one EIA fetch runs at a time
+let fetchPromise = null;
 
 /**
  * Ensure the oil_price_cache table exists.
@@ -98,13 +100,15 @@ async function fetchFromEIA() {
 
 /**
  * Trigger a refresh if the in-memory TTL has expired or we haven't fetched yet.
+ * Concurrent callers share a single in-flight fetch — only one EIA request runs at a time.
  * Never throws.
  */
 async function refreshIfStale() {
   const isStale = !lastFetchedAt || (Date.now() - lastFetchedAt) > CACHE_TTL_MS;
-  if (isStale) {
-    await fetchFromEIA();
-  }
+  if (!isStale) return;
+  if (fetchPromise) return fetchPromise;
+  fetchPromise = fetchFromEIA().finally(() => { fetchPromise = null; });
+  return fetchPromise;
 }
 
 /**
