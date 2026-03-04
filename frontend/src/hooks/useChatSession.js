@@ -124,6 +124,11 @@ export function useChatSession(initialSessionId = null) {
 
       return finalData;
     } catch (err) {
+      // AbortError is expected when the user navigates away — don't surface it
+      if (err.name === 'AbortError') {
+        setMessages(prev => prev.filter(m => !m.isOptimistic && m.id !== streamingId));
+        return;
+      }
       setError(err.message);
       setMessages(prev => prev.filter(m => !m.isOptimistic && m.id !== streamingId));
       console.error('Failed to send message:', err);

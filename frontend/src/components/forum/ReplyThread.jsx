@@ -4,7 +4,7 @@
  * Upvote state is server-driven via reply.isUpvoted.
  */
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ReplyForm } from './ReplyForm';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -33,7 +33,7 @@ export function ReplyThread({ replies, onAddReply, onUpvote = () => {}, onRemove
     return roots;
   };
 
-  const handleUpvoteToggle = async (reply) => {
+  const handleUpvoteToggle = useCallback(async (reply) => {
     try {
       if (reply.isUpvoted) {
         await onRemoveUpvote(reply.id);
@@ -43,12 +43,12 @@ export function ReplyThread({ replies, onAddReply, onUpvote = () => {}, onRemove
     } catch (err) {
       console.error('Failed to toggle upvote:', err);
     }
-  };
+  }, [onUpvote, onRemoveUpvote]);
 
-  const handleReply = async (parentReplyId, data) => {
+  const handleReply = useCallback(async (parentReplyId, data) => {
     await onAddReply({ ...data, parentReplyId });
     setReplyingTo(null);
-  };
+  }, [onAddReply]);
 
   const ReplyItem = ({ reply, depth = 0 }) => {
     return (
@@ -131,7 +131,7 @@ export function ReplyThread({ replies, onAddReply, onUpvote = () => {}, onRemove
     );
   };
 
-  const tree = buildTree(replies);
+  const tree = useMemo(() => buildTree(replies), [replies]);
 
   return (
     <div className="space-y-2">

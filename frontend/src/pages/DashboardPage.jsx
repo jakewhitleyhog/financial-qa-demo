@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
@@ -79,7 +79,7 @@ export default function DashboardPage() {
   useEffect(() => {
     dealAPI.getOilPrice()
       .then(res => setWtiPrice(res.data?.latest?.priceUsd ?? null))
-      .catch(() => {});
+      .catch(err => { console.warn('[DashboardPage] Oil price unavailable:', err.message); });
   }, []);
 
   if (loading) {
@@ -110,29 +110,29 @@ export default function DashboardPage() {
 
   const { deal, financials, capitalAllocation, projectedReturns, priceSensitivities } = data;
 
-  // Format financials for charts (revenue in $M)
-  const financialsChart = financials.map(f => ({
+  // Memoized chart transforms — only recalculate when source data changes
+  const financialsChart = useMemo(() => financials.map(f => ({
     year: String(f.year),
     'Revenue ($M)': +(f.revenue / 1_000_000).toFixed(1),
     'Op. Income ($M)': +(f.operatingIncome / 1_000_000).toFixed(1),
     'Distributions ($M)': +(f.distributions / 1_000_000).toFixed(1),
-  }));
+  })), [financials]);
 
-  // Pie data: capitalAllocation
-  const pieData = capitalAllocation.map(c => ({
+  const pieData = useMemo(() => capitalAllocation.map(c => ({
     name: c.category,
     value: +(c.percentage),
-  }));
+  })), [capitalAllocation]);
 
-  // Price sensitivity for bar chart (numeric price enables ReferenceLine)
-  const sensitivityChart = priceSensitivities.map(p => ({
+  const sensitivityChart = useMemo(() => priceSensitivities.map(p => ({
     price: p.oilPrice,
     'IRR (%)': +(p.irr).toFixed(1),
     'MOIC (x)': +(p.moic).toFixed(2),
-  }));
+  })), [priceSensitivities]);
 
-  // Projected returns table rows
-  const baseCase = projectedReturns.find(r => r.scenario?.toLowerCase().includes('base'));
+  const baseCase = useMemo(
+    () => projectedReturns.find(r => r.scenario?.toLowerCase().includes('base')),
+    [projectedReturns]
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
