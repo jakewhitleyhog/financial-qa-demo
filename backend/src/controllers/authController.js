@@ -167,6 +167,10 @@ export function logout(req, res) {
  * POST /api/auth/demo
  */
 export function demoLogin(req, res) {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ success: false, error: 'Demo login not available' });
+  }
+
   try {
     // Get the first authorized investor
     const investors = query('SELECT id, email, name, role, deal_id FROM authorized_investors LIMIT 1');

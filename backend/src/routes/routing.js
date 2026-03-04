@@ -11,16 +11,17 @@ import {
   updateEscalatedQuestion,
   getEscalationAnalytics
 } from '../controllers/routingController.js';
+import { requireAdmin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Escalation management
-router.post('/escalate', escalateQuestion);
-router.get('/escalated', listEscalatedQuestions);
-router.get('/escalated/:id', getEscalatedQuestion);
-router.patch('/escalated/:id', updateEscalatedQuestion);
+// Escalation management — list/update/analytics require admin (GP) role
+router.post('/escalate', escalateQuestion);            // investors can self-escalate
+router.get('/escalated', requireAdmin, listEscalatedQuestions);
+router.get('/escalated/:id', requireAdmin, getEscalatedQuestion);
+router.patch('/escalated/:id', requireAdmin, updateEscalatedQuestion);
 
-// Analytics
-router.get('/analytics', getEscalationAnalytics);
+// Analytics — admin only
+router.get('/analytics', requireAdmin, getEscalationAnalytics);
 
 export default router;

@@ -10,7 +10,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { query, run } from '../config/database.js';
+import { query, run, transaction } from '../config/database.js';
 import { processQuestion, generateSQL, formatResultsStream } from '../services/llmService.js';
 import { validateAndSanitize } from '../utils/sqlSanitizer.js';
 import { query as dbQuery } from '../config/database.js';
@@ -239,58 +239,60 @@ export async function sendMessage(req, res) {
       });
     }
 
-    // Store assistant message with metadata
-    const assistantMessageResult = run(
-      `INSERT INTO chat_messages (
-        session_id, role, content,
-        generated_sql, sql_results,
-        confidence_score, complexity_level, is_in_scope,
-        needs_escalation, escalation_reason,
-        created_at
-      ) VALUES (?, 'assistant', ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-      [
-        sessionId,
-        llmResponse.content,
-        llmResponse.metadata?.generatedSql || null,
-        JSON.stringify(llmResponse.metadata?.sqlResults || []),
-        routingAnalysis.confidenceScore,
-        routingAnalysis.complexity.level,
-        routingAnalysis.isInScope ? 1 : 0,
-        routingAnalysis.needsEscalation ? 1 : 0,
-        routingAnalysis.escalationReason || null
-      ]
-    );
-
-    // Update session last activity
-    run(
-      `UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`,
-      [sessionId]
-    );
-
-    // If escalation is needed, create escalated question entry
-    if (routingAnalysis.needsEscalation) {
-      run(
-        `INSERT INTO escalated_questions (
-          source_type, source_id, session_id, user_name,
-          question_text, escalation_reason, confidence_score,
-          status, created_at
-        ) VALUES ('chat', ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+    // Store assistant message + session update + optional escalation atomically
+    let assistantMessageId;
+    transaction(db => {
+      db.run(
+        `INSERT INTO chat_messages (
+          session_id, role, content,
+          generated_sql, sql_results,
+          confidence_score, complexity_level, is_in_scope,
+          needs_escalation, escalation_reason,
+          created_at
+        ) VALUES (?, 'assistant', ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
         [
-          assistantMessageResult.lastID,
           sessionId,
-          req.investor.name,
-          message,
-          routingAnalysis.escalationReason,
-          routingAnalysis.confidenceScore
+          llmResponse.content,
+          llmResponse.metadata?.generatedSql || null,
+          JSON.stringify(llmResponse.metadata?.sqlResults || []),
+          routingAnalysis.confidenceScore,
+          routingAnalysis.complexity.level,
+          routingAnalysis.isInScope ? 1 : 0,
+          routingAnalysis.needsEscalation ? 1 : 0,
+          routingAnalysis.escalationReason || null
         ]
       );
-    }
+      assistantMessageId = db.exec('SELECT last_insert_rowid()')[0]?.values[0][0];
+
+      db.run(
+        `UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`,
+        [sessionId]
+      );
+
+      if (routingAnalysis.needsEscalation) {
+        db.run(
+          `INSERT INTO escalated_questions (
+            source_type, source_id, session_id, user_name,
+            question_text, escalation_reason, confidence_score,
+            status, created_at
+          ) VALUES ('chat', ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+          [
+            assistantMessageId,
+            sessionId,
+            req.investor.name,
+            message,
+            routingAnalysis.escalationReason,
+            routingAnalysis.confidenceScore
+          ]
+        );
+      }
+    });
 
     // Return response with full metadata
     res.json({
       success: true,
       message: {
-        id: assistantMessageResult.lastID,
+        id: assistantMessageId,
         role: 'assistant',
         content: llmResponse.content,
         metadata: {
@@ -458,49 +460,56 @@ export async function streamMessage(req, res) {
       hadError: false
     });
 
-    const assistantResult = run(
-      `INSERT INTO chat_messages (
-         session_id, role, content,
-         generated_sql, sql_results,
-         confidence_score, complexity_level, is_in_scope,
-         needs_escalation, escalation_reason,
-         created_at
-       ) VALUES (?, 'assistant', ?, ?, ?, ?, ?, 1, ?, ?, datetime('now'))`,
-      [
-        sessionId,
-        fullContent,
-        pipeline.sql,
-        JSON.stringify(pipeline.results),
-        routingAnalysis.confidenceScore,
-        routingAnalysis.complexity.level,
-        routingAnalysis.needsEscalation ? 1 : 0,
-        routingAnalysis.escalationReason || null
-      ]
-    );
-
-    run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
-
-    if (routingAnalysis.needsEscalation) {
-      run(
-        `INSERT INTO escalated_questions (
-           source_type, source_id, session_id, user_name,
-           question_text, escalation_reason, confidence_score,
-           status, created_at
-         ) VALUES ('chat', ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+    let streamAssistantId;
+    transaction(db => {
+      db.run(
+        `INSERT INTO chat_messages (
+           session_id, role, content,
+           generated_sql, sql_results,
+           confidence_score, complexity_level, is_in_scope,
+           needs_escalation, escalation_reason,
+           created_at
+         ) VALUES (?, 'assistant', ?, ?, ?, ?, ?, 1, ?, ?, datetime('now'))`,
         [
-          assistantResult.lastID,
           sessionId,
-          req.investor.name,
-          message,
-          routingAnalysis.escalationReason,
-          routingAnalysis.confidenceScore
+          fullContent,
+          pipeline.sql,
+          JSON.stringify(pipeline.results),
+          routingAnalysis.confidenceScore,
+          routingAnalysis.complexity.level,
+          routingAnalysis.needsEscalation ? 1 : 0,
+          routingAnalysis.escalationReason || null
         ]
       );
-    }
+      streamAssistantId = db.exec('SELECT last_insert_rowid()')[0]?.values[0][0];
+
+      db.run(
+        `UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`,
+        [sessionId]
+      );
+
+      if (routingAnalysis.needsEscalation) {
+        db.run(
+          `INSERT INTO escalated_questions (
+             source_type, source_id, session_id, user_name,
+             question_text, escalation_reason, confidence_score,
+             status, created_at
+           ) VALUES ('chat', ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+          [
+            streamAssistantId,
+            sessionId,
+            req.investor.name,
+            message,
+            routingAnalysis.escalationReason,
+            routingAnalysis.confidenceScore
+          ]
+        );
+      }
+    });
 
     sendEvent({
       type: 'done',
-      messageId: assistantResult.lastID,
+      messageId: streamAssistantId,
       metadata: {
         generatedSql: pipeline.sql,
         resultCount: pipeline.results.length,

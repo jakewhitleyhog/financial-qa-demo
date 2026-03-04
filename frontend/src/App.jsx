@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import { Button } from './components/ui/Button';
 import { Home, MessageSquare, Bot, LogOut, Loader2, LayoutDashboard } from 'lucide-react';
 import { DEAL_NAME } from './config/project';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -108,7 +109,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Navigation />
-              <main><HomePage /></main>
+              <main><ErrorBoundary><HomePage /></ErrorBoundary></main>
             </ProtectedRoute>
           }
         />
@@ -117,7 +118,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Navigation />
-              <main><ForumPage /></main>
+              <main><ErrorBoundary><ForumPage /></ErrorBoundary></main>
             </ProtectedRoute>
           }
         />
@@ -126,7 +127,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Navigation />
-              <main><ChatPage /></main>
+              <main><ErrorBoundary><ChatPage /></ErrorBoundary></main>
             </ProtectedRoute>
           }
         />
@@ -136,7 +137,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Navigation />
-              <main><DashboardPage /></main>
+              <main><ErrorBoundary><DashboardPage /></ErrorBoundary></main>
             </ProtectedRoute>
           }
         />
