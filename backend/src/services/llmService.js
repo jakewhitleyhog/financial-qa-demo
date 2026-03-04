@@ -8,14 +8,12 @@
  * - Scope detection (is question related to database?)
  */
 
-import { getClaudeClient, MODEL_CONFIG, CONFIDENCE_MODEL_CONFIG, SCOPE_DETECTION_MODEL_CONFIG } from '../config/claude.js';
+import { getClaudeClient, MODEL_CONFIG } from '../config/claude.js';
 import { query as dbQuery, getSchema, getSampleData } from '../config/database.js';
 import { validateAndSanitize } from '../utils/sqlSanitizer.js';
 import {
   buildTextToSQLPrompt,
   buildResultsToNLPrompt,
-  buildConfidencePrompt,
-  buildScopeDetectionPrompt
 } from '../utils/promptTemplates.js';
 
 /**
@@ -330,95 +328,9 @@ export async function formatResultsStream(userQuestion, sqlQuery, results, conve
   // no need to call stream.finalMessage() separately
 }
 
-/**
- * Assess confidence in the generated SQL and results
- *
- * @param {string} userQuestion - The user's question
- * @param {string} sqlQuery - The generated SQL query
- * @param {Array} results - The query results
- * @returns {Promise<number>} - Confidence score between 0.0 and 1.0
- */
-export async function assessConfidence(userQuestion, sqlQuery, results) {
-  try {
-    const client = getClaudeClient();
-
-    if (!client) {
-      return 0.5; // Default to moderate confidence if no API key
-    }
-
-    // Build the confidence scoring prompt
-    const prompt = buildConfidencePrompt(userQuestion, sqlQuery, results);
-
-    // Call Claude API with faster model
-    const response = await client.messages.create({
-      ...CONFIDENCE_MODEL_CONFIG,
-      messages: [{
-        role: 'user',
-        content: prompt
-      }]
-    });
-
-    const scoreText = response.content[0].text.trim();
-    const score = parseFloat(scoreText);
-
-    // Validate score is between 0 and 1
-    if (isNaN(score) || score < 0 || score > 1) {
-      console.warn('Invalid confidence score returned:', scoreText);
-      return 0.5; // Default to moderate confidence
-    }
-
-    return score;
-
-  } catch (error) {
-    console.error('Confidence assessment error:', error);
-    return 0.5; // Default to moderate confidence on error
-  }
-}
-
-/**
- * Detect if a question is in scope (related to database contents)
- *
- * @param {string} userQuestion - The user's question
- * @returns {Promise<Object>} - { isInScope: boolean }
- */
-export async function detectScope(userQuestion) {
-  try {
-    const client = getClaudeClient();
-
-    if (!client) {
-      return { isInScope: true }; // Assume in scope if no API key
-    }
-
-    // Build the scope detection prompt
-    const prompt = buildScopeDetectionPrompt(userQuestion);
-
-    // Call Claude API — SCOPE_DETECTION_MODEL_CONFIG caps max_tokens at 20
-    const response = await client.messages.create({
-      ...SCOPE_DETECTION_MODEL_CONFIG,
-      messages: [{
-        role: 'user',
-        content: prompt
-      }]
-    });
-
-    const result = response.content[0].text.trim().toUpperCase();
-
-    return {
-      isInScope: result.includes('IN_SCOPE') && !result.includes('OUT')
-    };
-
-  } catch (error) {
-    console.error('Scope detection error:', error);
-    // On error, assume in scope to avoid false negatives
-    return { isInScope: true };
-  }
-}
-
 export default {
   processQuestion,
   generateSQL,
   formatResults,
   formatResultsStream,
-  assessConfidence,
-  detectScope
 };

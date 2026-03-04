@@ -16,6 +16,9 @@ import { validateAndSanitize } from '../utils/sqlSanitizer.js';
 import { query as dbQuery } from '../config/database.js';
 import { analyzeRouting } from '../services/routingService.js';
 
+const MAX_MESSAGE_LENGTH = 1000;
+const CONVERSATION_HISTORY_LIMIT = parseInt(process.env.CONVERSATION_HISTORY_LIMIT) || 10;
+
 /**
  * Shared SQL pipeline: text-to-SQL → validation → execution.
  * Used by both sendMessage() and streamMessage() so pipeline changes
@@ -182,8 +185,8 @@ export async function sendMessage(req, res) {
       });
     }
 
-    if (message.length > 1000) {
-      return res.status(400).json({ success: false, error: 'Message must be 1,000 characters or fewer' });
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({ success: false, error: `Message must be ${MAX_MESSAGE_LENGTH.toLocaleString()} characters or fewer` });
     }
 
     // Verify session exists and belongs to this investor
@@ -205,7 +208,7 @@ export async function sendMessage(req, res) {
       `SELECT role, content FROM chat_messages
        WHERE session_id = ?
        ORDER BY id DESC
-       LIMIT 10`,
+       LIMIT ${CONVERSATION_HISTORY_LIMIT}`,
       [sessionId]
     );
     const conversationHistory = historyRows.reverse(); // oldest-first for Claude
@@ -387,8 +390,8 @@ export async function streamMessage(req, res) {
       return;
     }
 
-    if (message.length > 1000) {
-      sendEvent({ type: 'error', message: 'Message must be 1,000 characters or fewer' });
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      sendEvent({ type: 'error', message: `Message must be ${MAX_MESSAGE_LENGTH.toLocaleString()} characters or fewer` });
       sendDone();
       return;
     }
@@ -409,7 +412,7 @@ export async function streamMessage(req, res) {
       `SELECT role, content FROM chat_messages
        WHERE session_id = ?
        ORDER BY id DESC
-       LIMIT 10`,
+       LIMIT ${CONVERSATION_HISTORY_LIMIT}`,
       [sessionId]
     );
     const conversationHistory = historyRows.reverse();

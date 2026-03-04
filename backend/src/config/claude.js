@@ -37,28 +37,7 @@ export const MODEL_CONFIG = {
   temperature: 0.0 // Use 0 for deterministic SQL generation
 };
 
-/**
- * Model for confidence scoring (can use faster model)
- */
-export const CONFIDENCE_MODEL_CONFIG = {
-  model: 'claude-sonnet-4-6',
-  max_tokens: 50,
-  temperature: 0.0
-};
-
-/**
- * Model config for scope detection — max_tokens is intentionally 20
- * (Claude only needs to return IN_SCOPE or OUT_OF_SCOPE)
- */
-export const SCOPE_DETECTION_MODEL_CONFIG = {
-  model: 'claude-sonnet-4-6',
-  max_tokens: 20,
-  temperature: 0.0
-};
-
 export default {
   getClaudeClient,
   MODEL_CONFIG,
-  CONFIDENCE_MODEL_CONFIG,
-  SCOPE_DETECTION_MODEL_CONFIG
 };
