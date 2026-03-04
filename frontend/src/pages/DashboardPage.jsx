@@ -9,21 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { WtiPriceCard } from '@/components/ui/WtiPriceCard';
 import { dealAPI } from '../services/api';
-
-// ── Warm palette colours used in charts ──────────────────────────────────────
-const PALETTE = {
-  sienna:    '#8B5E3C',
-  siennaDim: '#C4956A',
-  cream:     '#D4B896',
-  olive:     '#5C4A2A',
-  stone:     '#A89070',
-  rust:      '#C07040',
-};
-
-const PIE_COLORS = [
-  PALETTE.sienna, PALETTE.siennaDim, PALETTE.olive,
-  PALETTE.cream, PALETTE.stone, PALETTE.rust,
-];
+import { PALETTE, PIE_COLORS } from '../config/theme';
 
 // ── Small KPI card ────────────────────────────────────────────────────────────
 function KpiCard({ icon: Icon, label, value, sub, color = 'text-primary' }) {

@@ -4,8 +4,7 @@ import { Droplets, TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { dealAPI } from '@/services/api';
-
-const SIENNA = '#8B5E3C';
+import { WTI_COLOR } from '../../config/theme';
 
 /**
  * Self-fetching WTI crude oil price card with 30-day sparkline.
@@ -68,14 +67,14 @@ export function WtiPriceCard({ breakevenPrice = 45 }) {
             <AreaChart data={sparkData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradWti" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={SIENNA} stopOpacity={0.35} />
-                  <stop offset="95%" stopColor={SIENNA} stopOpacity={0}    />
+                  <stop offset="5%"  stopColor={WTI_COLOR} stopOpacity={0.35} />
+                  <stop offset="95%" stopColor={WTI_COLOR} stopOpacity={0}    />
                 </linearGradient>
               </defs>
               <Area
                 type="monotone"
                 dataKey="price"
-                stroke={SIENNA}
+                stroke={WTI_COLOR}
                 fill="url(#gradWti)"
                 strokeWidth={2}
                 dot={false}

@@ -7,8 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
-
-const DEAL_NAME = import.meta.env.VITE_DEAL_NAME || 'Investor Portal';
+import { DEAL_NAME, QUICK_START_QUESTIONS } from '../config/project';
 
 export function HomePage() {
   const { investor } = useAuth();
@@ -87,12 +86,7 @@ export function HomePage() {
           </CardHeader>
           <CardContent>
             <div className="grid sm:grid-cols-2 gap-3 text-sm">
-              {[
-                'What are the Tier 1 well economics?',
-                'Show me projected production by year',
-                'What is the target IRR and MOIC?',
-                'What are the price sensitivities?',
-              ].map((question) => (
+              {QUICK_START_QUESTIONS.map((question) => (
                 <button
                   key={question}
                   onClick={() => navigate('/chat', { state: { prefill: question } })}

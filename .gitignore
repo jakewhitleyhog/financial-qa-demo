@@ -37,8 +37,12 @@ yarn-error.log*
 *.tmp
 .cache/
 
-# Claude Code
-.claude/
+# Claude Code — settings are local-only; commands/ is shared with the team
+.claude/settings.local.json
+.claude/projects/
+.claude/memory/
+.claude/plans/
+.claude/store/
 
 # Source documents
 *.xlsx

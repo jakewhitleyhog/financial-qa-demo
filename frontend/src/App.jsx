@@ -8,8 +8,7 @@ import { VerifyPage } from './pages/VerifyPage';
 import DashboardPage from './pages/DashboardPage';
 import { Button } from './components/ui/Button';
 import { Home, MessageSquare, Bot, LogOut, Loader2, LayoutDashboard } from 'lucide-react';
-
-const DEAL_NAME = import.meta.env.VITE_DEAL_NAME || 'Investor Portal';
+import { DEAL_NAME } from './config/project';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
