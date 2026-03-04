@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
 } from 'recharts';
 import { TrendingUp, Droplets, DollarSign, Target, Layers, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { WtiPriceCard } from '@/components/ui/WtiPriceCard';
 import { dealAPI } from '../services/api';
 
 // ── Warm palette colours used in charts ──────────────────────────────────────
@@ -80,12 +81,19 @@ export default function DashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [wtiPrice, setWtiPrice] = useState(null);
 
   useEffect(() => {
     dealAPI.getSummary()
       .then(res => setData(res))
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    dealAPI.getOilPrice()
+      .then(res => setWtiPrice(res.data?.latest?.priceUsd ?? null))
+      .catch(() => {});
   }, []);
 
   if (loading) {
@@ -130,9 +138,9 @@ export default function DashboardPage() {
     value: +(c.percentage),
   }));
 
-  // Price sensitivity for bar chart
+  // Price sensitivity for bar chart (numeric price enables ReferenceLine)
   const sensitivityChart = priceSensitivities.map(p => ({
-    price: `$${p.oilPrice}`,
+    price: p.oilPrice,
     'IRR (%)': +(p.irr).toFixed(1),
     'MOIC (x)': +(p.moic).toFixed(2),
   }));
@@ -182,6 +190,11 @@ export default function DashboardPage() {
           value={`$${deal.fundBreakevenOilPrice}`}
           sub="per bbl"
         />
+      </div>
+
+      {/* WTI oil price card */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <WtiPriceCard breakevenPrice={deal.fundBreakevenOilPrice} />
       </div>
 
       {/* Row 1: Revenue + Capital Allocation */}
@@ -267,12 +280,21 @@ export default function DashboardPage() {
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={sensitivityChart} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="price" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                <XAxis dataKey="price" tickFormatter={(v) => `$${v}`} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip content={<ChartTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Bar dataKey="IRR (%)" fill={PALETTE.sienna} radius={[3, 3, 0, 0]} />
                 <Bar dataKey="MOIC (x)" fill={PALETTE.cream} radius={[3, 3, 0, 0]} />
+                {wtiPrice !== null && (
+                  <ReferenceLine
+                    x={wtiPrice}
+                    stroke={PALETTE.rust}
+                    strokeDasharray="4 2"
+                    strokeWidth={2}
+                    label={{ value: `WTI $${wtiPrice.toFixed(0)}`, position: 'top', fontSize: 10, fill: PALETTE.rust }}
+                  />
+                )}
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

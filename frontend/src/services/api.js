@@ -253,6 +253,10 @@ export const dealAPI = {
   getSummary: async () => {
     return fetchAPI('/deals/summary');
   },
+
+  getOilPrice: async () => {
+    return fetchAPI('/deals/oil-price');
+  },
 };
 
 export default {

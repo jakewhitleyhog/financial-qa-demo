@@ -303,3 +303,11 @@ CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id
 CREATE INDEX IF NOT EXISTS idx_escalated_questions_status ON escalated_questions(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_auth_tokens_token ON auth_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_authorized_investors_email ON authorized_investors(email);
+
+CREATE TABLE IF NOT EXISTS oil_price_cache (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    period TEXT NOT NULL UNIQUE,
+    price_usd DECIMAL(8, 2) NOT NULL,
+    fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_oil_price_cache_period ON oil_price_cache(period DESC);
