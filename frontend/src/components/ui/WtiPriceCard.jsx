@@ -22,7 +22,11 @@ export function WtiPriceCard({ breakevenPrice = 45 }) {
   }, []);
 
   if (oilData === undefined) {
-    return <Skeleton className="h-44 rounded-xl col-span-2" />;
+    return (
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <Skeleton className="h-44 rounded-xl col-span-2" />
+      </div>
+    );
   }
 
   if (!oilData?.latest) {
@@ -41,6 +45,7 @@ export function WtiPriceCard({ breakevenPrice = 45 }) {
   }));
 
   return (
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
     <Card className="col-span-2">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
@@ -92,6 +97,7 @@ export function WtiPriceCard({ breakevenPrice = 45 }) {
         )}
       </CardContent>
     </Card>
+    </div>
   );
 }
 
