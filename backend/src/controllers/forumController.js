@@ -4,7 +4,7 @@
  * Uses req.investor (set by auth middleware) for user identification.
  */
 
-import { query, run } from '../config/database.js';
+import { query, run, transaction, getDatabase } from '../config/database.js';
 
 /**
  * Create a new forum question
@@ -298,16 +298,17 @@ export async function upvoteQuestion(req, res) {
       });
     }
 
-    run(
-      `INSERT INTO forum_upvotes (investor_id, target_type, target_id, created_at)
-       VALUES (?, 'question', ?, datetime('now'))`,
-      [investorId, id]
-    );
-
-    run(
-      `UPDATE forum_questions SET upvotes = upvotes + 1 WHERE id = ?`,
-      [id]
-    );
+    transaction(db => {
+      db.run(
+        `INSERT INTO forum_upvotes (investor_id, target_type, target_id, created_at)
+         VALUES (?, 'question', ?, datetime('now'))`,
+        [investorId, id]
+      );
+      db.run(
+        `UPDATE forum_questions SET upvotes = upvotes + 1 WHERE id = ?`,
+        [id]
+      );
+    });
 
     const questions = query(
       `SELECT upvotes FROM forum_questions WHERE id = ?`,
@@ -337,18 +338,21 @@ export async function removeUpvoteQuestion(req, res) {
     const { id } = req.params;
     const investorId = req.investor.id;
 
-    const result = run(
-      `DELETE FROM forum_upvotes
-       WHERE investor_id = ? AND target_type = 'question' AND target_id = ?`,
-      [investorId, id]
-    );
-
-    if (result.changes > 0) {
-      run(
-        `UPDATE forum_questions SET upvotes = upvotes - 1 WHERE id = ?`,
-        [id]
+    let changed = false;
+    transaction(db => {
+      db.run(
+        `DELETE FROM forum_upvotes
+         WHERE investor_id = ? AND target_type = 'question' AND target_id = ?`,
+        [investorId, id]
       );
-    }
+      changed = getDatabase().getRowsModified() > 0;
+      if (changed) {
+        db.run(
+          `UPDATE forum_questions SET upvotes = MAX(0, upvotes - 1) WHERE id = ?`,
+          [id]
+        );
+      }
+    });
 
     const questions = query(
       `SELECT upvotes FROM forum_questions WHERE id = ?`,
@@ -396,16 +400,17 @@ export async function upvoteReply(req, res) {
       });
     }
 
-    run(
-      `INSERT INTO forum_upvotes (investor_id, target_type, target_id, created_at)
-       VALUES (?, 'reply', ?, datetime('now'))`,
-      [investorId, id]
-    );
-
-    run(
-      `UPDATE forum_replies SET upvotes = upvotes + 1 WHERE id = ?`,
-      [id]
-    );
+    transaction(db => {
+      db.run(
+        `INSERT INTO forum_upvotes (investor_id, target_type, target_id, created_at)
+         VALUES (?, 'reply', ?, datetime('now'))`,
+        [investorId, id]
+      );
+      db.run(
+        `UPDATE forum_replies SET upvotes = upvotes + 1 WHERE id = ?`,
+        [id]
+      );
+    });
 
     const replies = query(
       `SELECT upvotes FROM forum_replies WHERE id = ?`,
@@ -440,23 +445,30 @@ export async function removeUpvoteReply(req, res) {
       return res.status(404).json({ success: false, error: 'Reply not found' });
     }
 
-    const result = run(
-      `DELETE FROM forum_upvotes
+    const existing = query(
+      `SELECT id FROM forum_upvotes
        WHERE investor_id = ? AND target_type = 'reply' AND target_id = ?`,
       [investorId, id]
     );
 
-    if (result.changes === 0) {
+    if (existing.length === 0) {
       return res.status(400).json({
         success: false,
         error: 'You have not upvoted this reply'
       });
     }
 
-    run(
-      `UPDATE forum_replies SET upvotes = MAX(0, upvotes - 1) WHERE id = ?`,
-      [id]
-    );
+    transaction(db => {
+      db.run(
+        `DELETE FROM forum_upvotes
+         WHERE investor_id = ? AND target_type = 'reply' AND target_id = ?`,
+        [investorId, id]
+      );
+      db.run(
+        `UPDATE forum_replies SET upvotes = MAX(0, upvotes - 1) WHERE id = ?`,
+        [id]
+      );
+    });
 
     const replies = query(
       `SELECT upvotes FROM forum_replies WHERE id = ?`,

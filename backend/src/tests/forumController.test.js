@@ -3,6 +3,8 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 vi.mock('../config/database.js', () => ({
   query: vi.fn(),
   run: vi.fn(),
+  transaction: vi.fn(),
+  getDatabase: vi.fn(),
 }));
 
 import { query, run } from '../config/database.js';
@@ -246,8 +248,9 @@ describe('removeUpvoteReply', () => {
   });
 
   it('returns 400 when investor has not upvoted this reply', async () => {
-    query.mockReturnValueOnce([{ id: 5 }]);         // reply exists
-    run.mockReturnValueOnce({ changes: 0, lastID: null }); // DELETE matched nothing
+    query
+      .mockReturnValueOnce([{ id: 5 }])  // reply exists
+      .mockReturnValueOnce([]);           // no existing upvote
 
     const req = makeReq({ params: { id: '5' } });
     const res = makeRes();
@@ -258,9 +261,8 @@ describe('removeUpvoteReply', () => {
   it('returns 200 with updated upvote count on successful removal', async () => {
     query
       .mockReturnValueOnce([{ id: 5 }])      // reply exists
+      .mockReturnValueOnce([{ id: 99 }])     // existing upvote found
       .mockReturnValueOnce([{ upvotes: 1 }]); // updated count after removal
-    run.mockReturnValueOnce({ changes: 1, lastID: null }); // DELETE succeeded
-    run.mockReturnValueOnce({ changes: 1, lastID: null }); // UPDATE upvotes
 
     const req = makeReq({ params: { id: '5' } });
     const res = makeRes();

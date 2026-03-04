@@ -5,7 +5,6 @@
  * based on confidence scores, complexity, and scope.
  */
 
-import { assessConfidence } from './llmService.js';
 import { estimateComplexity } from '../utils/sqlSanitizer.js';
 
 /**
@@ -156,7 +155,7 @@ export function shouldEscalate({
  * @param {boolean} params.hadError - Error flag
  * @returns {Promise<Object>} - Complete routing analysis
  */
-export async function analyzeRouting({
+export function analyzeRouting({
   userQuestion,
   sqlQuery = null,
   results = [],
@@ -165,10 +164,21 @@ export async function analyzeRouting({
   hadError = false
 }) {
   try {
-    // Assess confidence (skip if there was an error or out of scope)
-    let confidenceScore = 0.5; // Default
-    if (isInScope && !hadError && sqlQuery) {
-      confidenceScore = await assessConfidence(userQuestion, sqlQuery, results);
+    // Derive confidence heuristically — avoids a third Claude API call per message.
+    // Scores: error/out-of-scope → 0.3, no results → 0.55, moderate query w/ results → 0.85,
+    // simple query w/ results → 0.95.
+    let confidenceScore = 0.5;
+    if (!isInScope || hadError || !sqlQuery) {
+      confidenceScore = 0.3;
+    } else {
+      const complexityScore = estimateComplexity(sqlQuery);
+      if (results.length === 0) {
+        confidenceScore = 0.55; // answered but empty — might be a misunderstanding
+      } else if (complexityScore > 5) {
+        confidenceScore = 0.75; // complex query succeeded — moderate confidence
+      } else {
+        confidenceScore = 0.92; // simple/moderate query with results — high confidence
+      }
     }
 
     // Assess complexity (skip if no SQL query)
@@ -200,15 +210,9 @@ export async function analyzeRouting({
 
   } catch (error) {
     console.error('Routing analysis error:', error);
-
-    // On error, default to cautious escalation
     return {
       confidenceScore: 0.3,
-      complexity: {
-        level: COMPLEXITY_LEVELS.MODERATE,
-        score: 0,
-        factors: []
-      },
+      complexity: { level: COMPLEXITY_LEVELS.MODERATE, score: 0, factors: [] },
       isInScope: true,
       needsEscalation: true,
       escalationReason: 'Error during routing analysis'

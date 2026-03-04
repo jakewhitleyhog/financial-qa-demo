@@ -29,10 +29,12 @@ export async function initializeDatabase() {
       // Load existing database
       const buffer = fs.readFileSync(dbPath);
       db = new SQL.Database(buffer);
+      db.run('PRAGMA foreign_keys = ON');
       console.log('✓ Database loaded from file');
     } else {
       // Create new database
       db = new SQL.Database();
+      db.run('PRAGMA foreign_keys = ON');
       console.log('✓ New database created');
 
       // Run schema
@@ -210,12 +212,34 @@ export function getSampleData(limit = 2) {
   return samples;
 }
 
+/**
+ * Execute multiple write operations atomically in a single transaction,
+ * then flush to disk once. Use instead of multiple run() calls to prevent
+ * partial writes and reduce disk I/O.
+ *
+ * @param {function(db: Database): void} fn - Callback that performs db.run() calls
+ * @returns {void}
+ */
+export function transaction(fn) {
+  const db = getDatabase();
+  db.run('BEGIN');
+  try {
+    fn(db);
+    db.run('COMMIT');
+    saveDatabase();
+  } catch (err) {
+    db.run('ROLLBACK');
+    throw err;
+  }
+}
+
 export default {
   initializeDatabase,
   getDatabase,
   saveDatabase,
   query,
   run,
+  transaction,
   getSchema,
   getSampleData
 };
