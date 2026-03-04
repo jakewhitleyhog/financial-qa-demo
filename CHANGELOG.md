@@ -2,6 +2,26 @@
 
 ---
 
+## [2026-03-04] — Live WTI crude oil price feed on dashboard
+
+**Branch:** feature/wti-oil-price-feed
+**PR:** #37
+
+Adds a live WTI crude oil price widget to the investor dashboard, sourced from the EIA Open Data API with a 24-hour lazy-fetch cache backed by SQLite.
+
+**Backend**
+- New `oil_price_cache` SQLite table (`schema.sql` + `ensureTable()` on startup)
+- `oilPriceService`: fetches 35 days of RWTC spot prices from EIA, upserts via batch `getDatabase().run()` + single `saveDatabase()` flush, 24h in-memory TTL, graceful degradation to stale rows when EIA is unreachable
+- `GET /api/deals/oil-price` — always returns HTTP 200; returns `{ latest: null, history: [] }` when no EIA key is set
+
+**Frontend**
+- `WtiPriceCard`: self-fetching KPI card with current WTI price, colour-coded delta vs. the fund's breakeven price, and a 30-day AreaChart sparkline; silently hidden when no API key is configured
+- `DashboardPage`: WtiPriceCard rendered below the KPI row; dashed `ReferenceLine` on the Price Sensitivity bar chart marking today's WTI price; sensitivity chart X-axis converted to numeric values with `tickFormatter` to support the reference line
+
+**Activation:** set `EIA_API_KEY=<your_key>` in `backend/.env` (free key from eia.gov). Without it the WTI card and reference line are absent and the rest of the dashboard is unaffected.
+
+---
+
 ## [2026-03-02] — Collapse scope detection into SQL generation step
 
 **GitHub Issue:** #22
