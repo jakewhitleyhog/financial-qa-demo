@@ -305,7 +305,7 @@ export default function DashboardPage() {
                 <tbody className="divide-y divide-border">
                   {projectedReturns.map((r, i) => (
                     <tr key={i} className="hover:bg-muted/40 transition-colors">
-                      <td className="py-2.5 font-medium capitalize">{r.scenario}</td>
+                      <td className="py-2.5 font-medium capitalize">{r.scenario.replace(/_/g, ' ')}</td>
                       <td className="py-2.5 text-right text-primary font-semibold">{r.irr}%</td>
                       <td className="py-2.5 text-right">{r.moic}x</td>
                       <td className="py-2.5 text-right text-muted-foreground">{r.returnOfCapitalYears}</td>
