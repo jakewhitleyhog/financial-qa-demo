@@ -3,7 +3,7 @@
  * Manages chat session state and provides methods for sending messages
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { chatAPI } from '../services/api';
 
 export function useChatSession(initialSessionId = null) {
@@ -12,6 +12,8 @@ export function useChatSession(initialSessionId = null) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
+  // Holds the AbortController for any in-flight stream so we can cancel on unmount
+  const streamAbortRef = useRef(null);
 
   /**
    * Load an existing session
@@ -86,6 +88,9 @@ export function useChatSession(initialSessionId = null) {
     let accumulatedContent = '';
     let finalData = null;
 
+    const controller = new AbortController();
+    streamAbortRef.current = controller;
+
     try {
       await chatAPI.sendMessageStream(
         sessionInfo.sessionId,
@@ -96,7 +101,8 @@ export function useChatSession(initialSessionId = null) {
             m.id === streamingId ? { ...m, content: accumulatedContent } : m
           ));
         },
-        (data) => { finalData = data; }
+        (data) => { finalData = data; },
+        controller.signal
       );
 
       // Replace optimistic + streaming placeholders with settled messages
@@ -135,6 +141,11 @@ export function useChatSession(initialSessionId = null) {
       loadSession(initialSessionId);
     }
   }, [initialSessionId, loadSession]);
+
+  // Cancel any in-flight stream when the component unmounts
+  useEffect(() => {
+    return () => { streamAbortRef.current?.abort(); };
+  }, []);
 
   return {
     sessionInfo,

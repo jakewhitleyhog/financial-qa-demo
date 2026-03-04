@@ -21,6 +21,13 @@ export async function createQuestion(req, res) {
       });
     }
 
+    if (title.length > 300) {
+      return res.status(400).json({ success: false, error: 'Title must be 300 characters or fewer' });
+    }
+    if (body.length > 5000) {
+      return res.status(400).json({ success: false, error: 'Body must be 5,000 characters or fewer' });
+    }
+
     const result = run(
       `INSERT INTO forum_questions (investor_id, user_name, title, body, upvotes, is_answered, created_at, updated_at)
        VALUES (?, ?, ?, ?, 0, 0, datetime('now'), datetime('now'))`,
@@ -228,6 +235,10 @@ export async function addReply(req, res) {
         success: false,
         error: 'Reply body is required'
       });
+    }
+
+    if (body.length > 5000) {
+      return res.status(400).json({ success: false, error: 'Reply must be 5,000 characters or fewer' });
     }
 
     const questions = query(
