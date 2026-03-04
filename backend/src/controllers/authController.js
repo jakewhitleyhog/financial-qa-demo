@@ -167,7 +167,7 @@ export function logout(req, res) {
  * POST /api/auth/demo
  */
 export function demoLogin(req, res) {
-  if (process.env.NODE_ENV === 'production') {
+  if (!process.env.ALLOW_DEMO_LOGIN) {
     return res.status(403).json({ success: false, error: 'Demo login not available' });
   }
 
