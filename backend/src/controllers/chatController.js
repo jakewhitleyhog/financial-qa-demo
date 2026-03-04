@@ -276,13 +276,14 @@ export async function sendMessage(req, res) {
       if (routingAnalysis.needsEscalation) {
         db.run(
           `INSERT INTO escalated_questions (
-            source_type, source_id, session_id, user_name,
+            source_type, source_id, session_id, investor_id, user_name,
             question_text, escalation_reason, confidence_score,
             status, created_at
-          ) VALUES ('chat', ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+          ) VALUES ('chat', ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
           [
             assistantMessageId,
             sessionId,
+            req.investor.id,
             req.investor.name,
             message,
             routingAnalysis.escalationReason,
@@ -436,11 +437,11 @@ export async function streamMessage(req, res) {
       run(`UPDATE chat_sessions SET last_activity = datetime('now') WHERE session_id = ?`, [sessionId]);
       run(
         `INSERT INTO escalated_questions (
-           source_type, source_id, session_id, user_name,
+           source_type, source_id, session_id, investor_id, user_name,
            question_text, escalation_reason, confidence_score,
            status, created_at
-         ) VALUES ('chat', ?, ?, ?, ?, ?, 0.0, 'pending', datetime('now'))`,
-        [assistantResult.lastID, sessionId, req.investor.name, message, pipeline.escalationReason]
+         ) VALUES ('chat', ?, ?, ?, ?, ?, ?, 0.0, 'pending', datetime('now'))`,
+        [assistantResult.lastID, sessionId, req.investor.id, req.investor.name, message, pipeline.escalationReason]
       );
 
       sendEvent({ type: 'done', messageId: assistantResult.lastID, metadata: { isInScope: pipeline.isInScope, needsEscalation: true } });
@@ -501,13 +502,14 @@ export async function streamMessage(req, res) {
       if (routingAnalysis.needsEscalation) {
         db.run(
           `INSERT INTO escalated_questions (
-             source_type, source_id, session_id, user_name,
+             source_type, source_id, session_id, investor_id, user_name,
              question_text, escalation_reason, confidence_score,
              status, created_at
-           ) VALUES ('chat', ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+           ) VALUES ('chat', ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
           [
             streamAssistantId,
             sessionId,
+            req.investor.id,
             req.investor.name,
             message,
             routingAnalysis.escalationReason,

@@ -3,7 +3,7 @@
  * Displays a full question with replies. Upvote state is server-driven (no localStorage).
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -39,7 +39,7 @@ export function QuestionDetail({ questionId, onBack }) {
     }
   };
 
-  const handleUpvote = async () => {
+  const handleUpvote = useCallback(async () => {
     try {
       if (isUpvoted) {
         const result = await forumAPI.removeUpvoteQuestion(questionId);
@@ -53,15 +53,15 @@ export function QuestionDetail({ questionId, onBack }) {
     } catch (err) {
       console.error('Failed to toggle upvote:', err);
     }
-  };
+  }, [questionId, isUpvoted]);
 
-  const handleAddReply = async (data) => {
+  const handleAddReply = useCallback(async (data) => {
     const result = await forumAPI.addReply(questionId, data.body, data.parentReplyId);
     setReplies(prev => [...prev, { ...result.reply, isUpvoted: false }]);
     setShowReplyForm(false);
-  };
+  }, [questionId]);
 
-  const handleUpvoteReply = async (replyId) => {
+  const handleUpvoteReply = useCallback(async (replyId) => {
     try {
       const result = await forumAPI.upvoteReply(replyId);
       setReplies(prev => prev.map(r =>
@@ -70,9 +70,9 @@ export function QuestionDetail({ questionId, onBack }) {
     } catch (err) {
       console.error('Failed to upvote reply:', err);
     }
-  };
+  }, []);
 
-  const handleRemoveUpvoteReply = async (replyId) => {
+  const handleRemoveUpvoteReply = useCallback(async (replyId) => {
     try {
       const result = await forumAPI.removeUpvoteReply(replyId);
       setReplies(prev => prev.map(r =>
@@ -81,7 +81,7 @@ export function QuestionDetail({ questionId, onBack }) {
     } catch (err) {
       console.error('Failed to remove reply upvote:', err);
     }
-  };
+  }, []);
 
   if (isLoading) {
     return (
