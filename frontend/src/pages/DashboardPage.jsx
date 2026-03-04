@@ -83,6 +83,30 @@ export default function DashboardPage() {
       .catch(err => { console.warn('[DashboardPage] Oil price unavailable:', err.message); });
   }, []);
 
+  // Memoized chart transforms — hooks must be called unconditionally (before early returns)
+  const financialsChart = useMemo(() => data?.financials?.map(f => ({
+    year: String(f.year),
+    'Revenue ($M)': +(f.revenue / 1_000_000).toFixed(1),
+    'Op. Income ($M)': +(f.operatingIncome / 1_000_000).toFixed(1),
+    'Distributions ($M)': +(f.distributions / 1_000_000).toFixed(1),
+  })) ?? [], [data?.financials]);
+
+  const pieData = useMemo(() => data?.capitalAllocation?.map(c => ({
+    name: c.category,
+    value: +(c.percentage),
+  })) ?? [], [data?.capitalAllocation]);
+
+  const sensitivityChart = useMemo(() => data?.priceSensitivities?.map(p => ({
+    price: p.oilPrice,
+    'IRR (%)': +(p.irr).toFixed(1),
+    'MOIC (x)': +(p.moic).toFixed(2),
+  })) ?? [], [data?.priceSensitivities]);
+
+  const baseCase = useMemo(
+    () => data?.projectedReturns?.find(r => r.scenario?.toLowerCase().includes('base')),
+    [data?.projectedReturns]
+  );
+
   if (loading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 space-y-6">
@@ -110,30 +134,6 @@ export default function DashboardPage() {
   }
 
   const { deal, financials, capitalAllocation, projectedReturns, priceSensitivities } = data;
-
-  // Memoized chart transforms — only recalculate when source data changes
-  const financialsChart = useMemo(() => financials.map(f => ({
-    year: String(f.year),
-    'Revenue ($M)': +(f.revenue / 1_000_000).toFixed(1),
-    'Op. Income ($M)': +(f.operatingIncome / 1_000_000).toFixed(1),
-    'Distributions ($M)': +(f.distributions / 1_000_000).toFixed(1),
-  })), [financials]);
-
-  const pieData = useMemo(() => capitalAllocation.map(c => ({
-    name: c.category,
-    value: +(c.percentage),
-  })), [capitalAllocation]);
-
-  const sensitivityChart = useMemo(() => priceSensitivities.map(p => ({
-    price: p.oilPrice,
-    'IRR (%)': +(p.irr).toFixed(1),
-    'MOIC (x)': +(p.moic).toFixed(2),
-  })), [priceSensitivities]);
-
-  const baseCase = useMemo(
-    () => projectedReturns.find(r => r.scenario?.toLowerCase().includes('base')),
-    [projectedReturns]
-  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 space-y-8">
@@ -179,10 +179,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* WTI oil price card */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <WtiPriceCard breakevenPrice={deal.fundBreakevenOilPrice} />
-      </div>
+      {/* WTI oil price card — renders null when no EIA key */}
+      <WtiPriceCard breakevenPrice={deal.fundBreakevenOilPrice} />
 
       {/* Row 1: Revenue + Capital Allocation */}
       <div className="grid gap-6 md:grid-cols-2">
