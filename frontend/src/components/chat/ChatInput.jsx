@@ -35,14 +35,14 @@ export function ChatInput({ onSend, disabled = false, placeholder = 'Ask a quest
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
-        className="min-h-[60px] flex-1 resize-none"
+        className="min-h-[48px] md:min-h-[60px] flex-1 resize-none"
         rows={2}
       />
       <Button
         type="submit"
         disabled={disabled || !input.trim()}
         size="icon"
-        className="h-[60px] w-[60px]"
+        className="h-12 w-12 md:h-[60px] md:w-[60px] shrink-0"
       >
         <Send className="h-5 w-5" />
       </Button>

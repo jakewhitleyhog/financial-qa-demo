@@ -7,7 +7,7 @@ import { ChatInterface } from '../components/chat/ChatInterface';
 
 export function ChatPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-4 md:py-8">
       <div className="max-w-4xl mx-auto">
         <ChatInterface />
       </div>
