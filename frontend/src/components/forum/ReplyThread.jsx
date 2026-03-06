@@ -54,7 +54,7 @@ export function ReplyThread({ replies, onAddReply, onUpvote = () => {}, onRemove
     return (
       <div
         className={`${
-          depth > 0 ? 'ml-8 pl-4 border-l-2 border-border' : ''
+          depth > 0 ? 'ml-4 md:ml-8 pl-2 md:pl-4 border-l-2 border-border' : ''
         } py-3`}
       >
         <div className="flex gap-3">

@@ -39,49 +39,49 @@ function Navigation() {
     <header className="border-b bg-card">
       <div className="container mx-auto px-4 py-3">
         <nav className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             <img
               src="/logo.png"
               alt="Logo"
-              className="h-8"
+              className="h-8 shrink-0"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
-            <Link to="/" className="text-lg font-bold text-foreground">
+            <Link to="/" className="text-lg font-bold text-foreground truncate hidden sm:block">
               {DEAL_NAME}
             </Link>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Link to="/">
               <Button variant={isActive('/') ? 'default' : 'ghost'} size="sm">
-                <Home className="h-4 w-4 mr-2" />
-                Home
+                <Home className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Home</span>
               </Button>
             </Link>
 
             <Link to="/forum">
               <Button variant={isActive('/forum') ? 'default' : 'ghost'} size="sm">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Q&A
+                <MessageSquare className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Q&A</span>
               </Button>
             </Link>
 
             <Link to="/dashboard">
               <Button variant={isActive('/dashboard') ? 'default' : 'ghost'} size="sm">
-                <LayoutDashboard className="h-4 w-4 mr-2" />
-                Dashboard
+                <LayoutDashboard className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
               </Button>
             </Link>
 
             <Link to="/chat">
               <Button variant={isActive('/chat') ? 'default' : 'ghost'} size="sm">
-                <Bot className="h-4 w-4 mr-2" />
-                AI Assistant
+                <Bot className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">AI Assistant</span>
               </Button>
             </Link>
 
-            <div className="ml-4 pl-4 border-l flex items-center gap-3">
-              <span className="text-sm text-muted-foreground hidden sm:inline">
+            <div className="ml-2 pl-2 sm:ml-4 sm:pl-4 border-l flex items-center gap-2">
+              <span className="text-sm text-muted-foreground hidden md:inline">
                 {investor?.name}
               </span>
               <Button variant="ghost" size="sm" onClick={logout} title="Sign out">

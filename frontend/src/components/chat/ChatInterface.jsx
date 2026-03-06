@@ -58,7 +58,7 @@ export function ChatInterface({ sessionId = null }) {
   };
 
   return (
-    <Card className="flex flex-col h-[calc(100vh-200px)]">
+    <Card className="flex flex-col h-[calc(100dvh-130px)] min-h-[400px]">
       <CardHeader>
         <CardTitle>Deal AI Assistant</CardTitle>
         <p className="text-sm text-muted-foreground">

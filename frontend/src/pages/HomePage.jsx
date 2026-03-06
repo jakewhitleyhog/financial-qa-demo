@@ -17,11 +17,11 @@ export function HomePage() {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         {/* Hero section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">
+        <div className="text-center mb-8 md:mb-12">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">
             Welcome, {investor?.name?.split(' ')[0]}
           </h1>
-          <p className="text-xl text-muted-foreground mb-2">
+          <p className="text-lg md:text-xl text-muted-foreground mb-2">
             {DEAL_NAME}
           </p>
           <p className="text-muted-foreground">
@@ -30,7 +30,7 @@ export function HomePage() {
         </div>
 
         {/* Feature cards */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
           {/* AI Assistant card */}
           <Card>
             <CardHeader>
